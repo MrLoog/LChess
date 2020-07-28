@@ -1,0 +1,114 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Board : MonoBehaviour
+{
+
+    [SerializeField]
+    GameTile tilePrefab = default;
+
+    [SerializeField]
+    Transform board = default;
+
+    Vector2Int size;
+
+    [SerializeField]
+    Texture2D gridTexture = default;
+
+    bool showGrid;
+
+    public bool ShowGrid
+    {
+        get => showGrid;
+        set
+        {
+            showGrid = value;
+            Material m = board.GetComponent<MeshRenderer>().material;
+            if (showGrid)
+            {
+                m.mainTexture = gridTexture;
+                m.SetTextureScale("_MainTex", size);
+            }
+            else
+            {
+                m.mainTexture = null;
+            }
+        }
+    }
+
+    public void Initialize(Vector2Int size)
+    {
+        this.size = size;
+        board.localScale = new Vector3(size.x, size.y, 1f);
+        Vector2 offset = new Vector2(
+            (size.x - 1) * 0.5f, (size.y - 1) * 0.5f
+        );
+        tiles = new GameTile[size.x * size.y];
+
+        for (int i = 0, y = 0; y < size.y; y++)
+        {
+            for (int x = 0; x < size.x; x++, i++)
+            {
+                GameTile tile = tiles[i] = Instantiate(tilePrefab);
+                tile.transform.SetParent(transform, false);
+                tile.transform.localPosition = new Vector3(
+                    x - offset.x, 0f, y - offset.y
+                );
+            }
+        }
+
+        for (int i = 0; i < (size.x * size.y); i++)
+        {
+            GameTile tile = tiles[i];
+            tile.NTile = (i - size.x > -1) ? tiles[i - size.x] : null;
+            // tile.NETile = (i - size.x + 1 > -1) ? tiles[i - size.x + 1] : null;
+            // tile.WNTile = (i - size.x - 1 > -1) ? tiles[i - size.x - 1] : null;
+
+            tile.ETile = ((i + 1) % size.y > 0) ? tiles[i + 1] : null;
+            tile.WTile = ((i + 1) % size.y > 1) ? tiles[i - 1] : null;
+
+            tile.STile = (i + size.x + 1 < (size.x * size.y)) ? tiles[i + size.x] : null;
+            // tile.ESTile = (i + size.x + 2 < (size.x * size.y)) ? tiles[i + size.x + 1] : null;
+            // tile.SWTile = (i + size.x < (size.x * size.y)) ? tiles[i + size.x - 1] : null;
+        }
+
+        for (int i = 0; i < (size.x * size.y); i++)
+        {
+            GameTile tile = tiles[i];
+            tile.NETile = (tile.NTile != null) ? tile.NTile.ETile : null;
+            tile.WNTile = (tile.NTile != null) ? tile.NTile.WTile : null;
+
+            tile.ESTile = (tile.STile != null) ? tile.STile.ETile : null;
+            tile.SWTile = (tile.STile != null) ? tile.STile.WTile : null;
+        }
+    }
+
+    internal GameTile GetTile(int x, int y)
+    {
+        if (x >= 0 && x < size.x && y >= 0 && y < size.y)
+        {
+            return tiles[x + y * size.x];
+        }
+        Debug.Log(string.Format("Wrong x/y {0}/{1}", x, y));
+        return null;
+    }
+
+    public GameTile GetTile(Ray ray)
+    {
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            int x = (int)(hit.point.x + size.x * 0.5f);
+            int y = (int)(hit.point.z + size.y * 0.5f);
+            if (x >= 0 && x < size.x && y >= 0 && y < size.y)
+            {
+                return tiles[x + y * size.x];
+            }
+        }
+        return null;
+    }
+
+
+    GameTile[] tiles;
+}
