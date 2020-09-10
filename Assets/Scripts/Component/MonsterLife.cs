@@ -6,11 +6,7 @@ using System.Threading.Tasks;
 
 namespace Assets.Scripts.Component
 {
-    public abstract class LComponent
+    public class MonsterLife : LComponent
     {
-        public virtual bool Update()
-        {
-            return true;
-        }
     }
 }

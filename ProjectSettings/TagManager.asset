@@ -4,8 +4,8 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - CubeMonster
   - Board
+  - Bullet
   layers:
   - Default
   - TransparentFX

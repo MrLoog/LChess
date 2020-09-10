@@ -12,7 +12,7 @@ public class Board : MonoBehaviour
     [SerializeField]
     Transform board = default;
 
-    Vector2Int size;
+    public Vector2Int Size { get; private set; }
 
     [SerializeField]
     Texture2D gridTexture = default;
@@ -29,7 +29,7 @@ public class Board : MonoBehaviour
             if (showGrid)
             {
                 m.mainTexture = gridTexture;
-                m.SetTextureScale("_MainTex", size);
+                m.SetTextureScale("_MainTex", Size);
             }
             else
             {
@@ -40,7 +40,7 @@ public class Board : MonoBehaviour
 
     public void Initialize(Vector2Int size)
     {
-        this.size = size;
+        Size = size;
         board.localScale = new Vector3(size.x, size.y, 1f);
         Vector2 offset = new Vector2(
             (size.x - 1) * 0.5f, (size.y - 1) * 0.5f
@@ -87,9 +87,9 @@ public class Board : MonoBehaviour
 
     internal GameTile GetTile(int x, int y)
     {
-        if (x >= 0 && x < size.x && y >= 0 && y < size.y)
+        if (x >= 0 && x < Size.x && y >= 0 && y < Size.y)
         {
-            return tiles[x + y * size.x];
+            return tiles[x + y * Size.x];
         }
         Debug.Log(string.Format("Wrong x/y {0}/{1}", x, y));
         return null;
@@ -99,11 +99,11 @@ public class Board : MonoBehaviour
     {
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            int x = (int)(hit.point.x + size.x * 0.5f);
-            int y = (int)(hit.point.z + size.y * 0.5f);
-            if (x >= 0 && x < size.x && y >= 0 && y < size.y)
+            int x = (int)(hit.point.x + Size.x * 0.5f);
+            int y = (int)(hit.point.z + Size.y * 0.5f);
+            if (x >= 0 && x < Size.x && y >= 0 && y < Size.y)
             {
-                return tiles[x + y * size.x];
+                return tiles[x + y * Size.x];
             }
         }
         return null;

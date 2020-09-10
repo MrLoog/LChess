@@ -23,5 +23,6 @@ namespace Assets.Scripts
             received.SetCurrentHealth(received.GetCurrentHealth() - damage);
             return damage;
         }
+        
     }
 }

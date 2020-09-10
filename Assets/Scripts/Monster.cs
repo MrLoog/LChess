@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts;
+using Assets.Scripts.Component;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,27 +7,11 @@ using UnityEngine.AI;
 
 public class Monster : MonoBehaviour, ReceivedDmgAble
 {
-    public static int CountMonster = 0;
-    public int MonsterID = 0;
-    MonsterFactory originFactory;
-    public DestroyAbleObj OnDestroyNotify { get; internal set; }
-    public bool BattleMode { get; set; } = false;
-    public string Test { get; set; }
-
-
-    public Board board { get; set; }
-
-    public Material mat;
-    public Material enemyMat;
-    public Monster TargetAttack;
-
+    //common prop
     [SerializeField]
     public Material SelectedMat;
-
-    private GameTile StandTile;
-
-    private int group = 0;
-
+    public int MonstersLayerMask { get; private set; }
+    public int group = 0;
     public int Group
     {
         get => group;
@@ -37,15 +22,19 @@ public class Monster : MonoBehaviour, ReceivedDmgAble
             transform.Find("Model/Cube").GetComponent<Renderer>().material = SelectedMat;
         }
     }
+    public int MonsterID = 0;
+    public DestroyAbleObj OnDestroyNotify { get; internal set; } = default;
+    public bool BattleMode { get; set; } = false;
+    public Monster TargetAttack;
+    private GameTile StandTile;
+    public MonsterFactory OriginFactory { get; set; }
+    #region attribute monster statistic
+    public float RangeAttack { get; private set; } = 2f;
+    #endregion
 
-    public MonsterFactory OriginFactory
-    {
-        get => originFactory;
-        set
-        {
-            originFactory = value;
-        }
-    }
+
+
+    #region logic spawn
     public void SpawnOn(GameTile tile)
     {
         transform.localPosition = tile.transform.localPosition;
@@ -53,7 +42,42 @@ public class Monster : MonoBehaviour, ReceivedDmgAble
         StandTile = tile;
         Health = Random.Range(0.0f, 1.0f) * 100;
         OnDestroyNotify = new DestroyAbleObj(this);
+        InitComponet();
     }
+
+    LComponent[] components = new LComponent[MAX_SIZE_COMPONENT];
+    private static int MAX_SIZE_COMPONENT = 10;
+
+    private void InitComponet()
+    {
+        components[0] = new MonsterFindEnemy(this);
+        components[1] = new MonsterMoving(this);
+        components[2] = new MonsterAttacking(this);
+    }
+
+    internal void ApplyDamage(float damage)
+    {
+        Health -= damage;
+    }
+    #endregion logic spawn
+
+    public void Start()
+    {
+    }
+
+    //undetermine
+
+    public static int CountMonster = 0;
+
+
+    public Board board { get; set; }
+
+    public Material mat;
+    public Material enemyMat;
+
+
+
+
 
     private float speed;
     public bool Moving = false;
@@ -75,85 +99,36 @@ public class Monster : MonoBehaviour, ReceivedDmgAble
         //moving = true;
     }
 
-    float rangeAttack = 2f;
-    float attackSpeed = 1f;
-    float attackTime = 0;
+    public float attackSpeed = 1f;
+    public float attackTime = 0;
 
     void Awake()
     {
-        monstersLayerMask = 1 << LayerMask.NameToLayer("Monster");
+        MonstersLayerMask = 1 << LayerMask.NameToLayer("Monster");
     }
-
+    /*
     bool IsTargetInsideRange()
     {
         if (TargetAttack == null) return false;
-        return Vector3.Distance(this.transform.position, TargetAttack.transform.position) < rangeAttack;
+        return Vector3.Distance(this.transform.position, TargetAttack.transform.position) < RangeAttack;
     }
+    */
 
     void Update()
     {
+        for (int i = 0; i < MAX_SIZE_COMPONENT; i++)
+        {
+            if (components[i] != null) components[i].Update();
+        }
+
+
         if (Health <= 0)
         {
             Destroy();
             Debug.Log(string.Format("{0} out of health, I'm dead", MonsterID));
-            originFactory.Reclaim(this);
+            OriginFactory.Reclaim(this);
             return;
         }
-        if (Moving)
-        {
-            MonsterMove.GameUpdate();
-            if (IsTargetInsideRange())
-            {
-                MonsterMove.StopMoving();
-            }
-            //progress += Time.deltaTime;
-            //transform.localPosition = Vector3.LerpUnclamped(moveFrom, moveTo, progress);
-            //if (progress >= 1)
-            //{
-            //    moving = false;
-            //    progress = 0;
-            //}
-        }
-        if (BattleMode)
-        {
-            if (!Moving && !IsTargetInsideRange())
-            {
-                TargetAttack = null;
-            }
-            if (TargetAttack == null)
-            {
-                AcquireTarget();
-            }
-        }
-        foreach (MonsterAttack attack in monsterAttacks)
-        {
-            attack.GameUpdate();
-        }
-        for (var i = (monsterAttacks.Count - 1); i >= 0; i--)
-        {
-            if (monsterAttacks[i].IsDone)
-            {
-                MonsterAttack attack = monsterAttacks[i];
-                if (TargetAttack != null)
-                {
-                    float damage = new DmgCalculate(TargetAttack, attack).PerformDamage();
-                    Debug.Log(string.Format("Monster {0} Received {1} Damage Current Health {2}", TargetAttack.MonsterID, damage, TargetAttack.Health));
-                }
-                StopAttack(attack);
-                attack.Destroy();
-            }
-        }
-        if ((IsDoneMoving() || !Moving) && TargetAttack != null)
-        {
-            attackTime += Time.deltaTime;
-            float attack = attackSpeed * attackTime / 1;
-            if (attack >= 1)
-            {
-                Attack();
-                attackTime = 0;
-            }
-        }
-
     }
 
     private bool IsDoneMoving()
@@ -188,17 +163,17 @@ public class Monster : MonoBehaviour, ReceivedDmgAble
         monsterAttacks.Add(attack);
     }
 
-    int monstersLayerMask;
 
     public void StopAttack(MonsterAttack attack)
     {
         monsterAttacks.Remove(attack);
     }
 
+    /*
     bool AcquireTarget()
     {
         Collider[] targets = Physics.OverlapSphere(
-            transform.localPosition, MonsterSight.GetSight(), monstersLayerMask
+            transform.localPosition, MonsterSight.GetSight(), MonstersLayerMask
         );
         if (targets.Length > 1)
         {
@@ -242,6 +217,7 @@ public class Monster : MonoBehaviour, ReceivedDmgAble
         MonsterMove = new MonsterMove(this, TargetAttack.transform.position, 3f);
         MonsterMove.StartMoving();
     }
+    */
 
     public float Health = 100;
 

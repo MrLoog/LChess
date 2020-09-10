@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657868, g: 0.49641263, b: 0.57481706, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -329,6 +329,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1256947446}
   - component: {fileID: 1256947445}
+  - component: {fileID: 1256947447}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -348,6 +349,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f72846da6ece8c049a741ebc0817f433, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MAX_RANDOM_SPAWN: 30
   boardSize: {x: 11, y: 11}
   board: {fileID: 956351220}
   monsterFactory: {fileID: 11400000, guid: caa6452848000ec40bffcd4d222537c3, type: 2}
@@ -367,6 +369,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1256947447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1256947444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c942223c58d4a984c95fe5c4f9620f72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pooledObjects: []
+  objectToPool: {fileID: 7600489754051676356, guid: 742468c285e54eb4092ace67f3e4f8a1,
+    type: 3}
+  _currentAvaiable: {fileID: 0}
+  _lastAvaiable: {fileID: 0}
 --- !u!1 &1552010567
 GameObject:
   m_ObjectHideFlags: 0

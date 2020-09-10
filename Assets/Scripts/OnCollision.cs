@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class OnCollision : MonoBehaviour
 {
@@ -9,9 +10,10 @@ public class OnCollision : MonoBehaviour
     {
         Debug.Log("trigger");
         Monster m = gameObject.transform.parent.transform.parent.GetComponent<Monster>();
-        if ((other.tag == "Board")) { }
+        if (other.gameObject.CompareTag("Board")) { }
 
-        if (other.gameObject.CompareTag("CubeMonster"))
+        //else if (other.gameObject.CompareTag("CubeMonster"))
+        else if (other.gameObject.CompareTag("CubeMonster"))
         {
             Monster enemy = other.transform.parent.transform.parent.GetComponent<Monster>();
             if (m.TargetAttack != null && m.TargetAttack.MonsterID == enemy.MonsterID)
@@ -32,6 +34,14 @@ public class OnCollision : MonoBehaviour
                     Debug.Log("found monster move");
                     m.MonsterMove.StopMoving();
                 }
+            }
+        }
+        else if (other.gameObject.CompareTag("Bullet"))
+        {
+            MonsterAttack bullet = other.transform.parent.transform.parent.GetComponent<MonsterAttack>();
+            if (!m.Equals(bullet.Owner))
+            {
+                bullet.ApplyDamage(m);
             }
         }
 

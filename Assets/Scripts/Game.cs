@@ -7,6 +7,11 @@ using UnityEngine;
 public class Game : MonoBehaviour
 {
 
+
+    public static Game Instance { get; private set; }
+    public int MAX_RANDOM_SPAWN = 10;
+    private int _spawnCount = 0;
+
     [SerializeField]
     public Vector2Int boardSize = new Vector2Int(11, 11);
 
@@ -21,6 +26,7 @@ public class Game : MonoBehaviour
     WarFactory warFactory = default;
 
     public List<Monster> monsters = new List<Monster>();
+    public GameBullet gameBullet = new GameBullet();
 
     static Game instance;
 
@@ -37,6 +43,13 @@ public class Game : MonoBehaviour
 
     void Awake()
     {
+        if (Instance != null && Instance != this)
+            Destroy(gameObject);
+        else
+            Instance = this;
+
+        DontDestroyOnLoad(gameObject);
+
         board.Initialize(boardSize);
         board.ShowGrid = true;
     }
@@ -72,18 +85,21 @@ public class Game : MonoBehaviour
         {
             _randomProcess += Time.deltaTime;
             _cumUpTimeRandom += Time.deltaTime;
-            if (_cumUpTimeRandom > MaxTimeRandom)
+            if (_spawnCount >= MAX_RANDOM_SPAWN)
             {
                 _cumUpTimeRandom = 0;
                 _randomProcess = 0;
+                _spawnCount = 0;
                 RandomMode = false;
             }
-            if (_randomProcess >= RandomDelay)
+            else if (_randomProcess >= RandomDelay)
             {
                 _randomProcess = 0f;
                 RandomSpawn();
+                _spawnCount++;
             }
         }
+       
     }
 
     bool RandomMode { get; set; } = false;
@@ -94,8 +110,18 @@ public class Game : MonoBehaviour
 
     private void RandomSpawn()
     {
-        int x = Mathf.RoundToInt(Random.Range(0.0f, boardSize.x - 1));
-        int y = Mathf.RoundToInt(Random.Range(0.0f, boardSize.y - 1));
+        GameTile emptyTile = null;
+        do
+        {
+            int x = Mathf.RoundToInt(Random.Range(0.0f, boardSize.x - 1));
+            int y = Mathf.RoundToInt(Random.Range(0.0f, boardSize.y - 1));
+            emptyTile = board.GetTile(x, y);
+            if (emptyTile.Monster != null)
+            {
+                emptyTile = null;
+            }
+        } while (emptyTile == null && monsters.Count < ((boardSize.x) * (boardSize.y)));
+        if (emptyTile == null) return;
         int totalGroup1 = monsters.Where(a => a.Group == 0).Count();
         int totalGroup2 = monsters.Where(a => a.Group == 1).Count();
 
@@ -105,14 +131,14 @@ public class Game : MonoBehaviour
             float p1 = (float)totalGroup1 / (totalGroup1 + totalGroup2);
             float p2 = 1f + (float)totalGroup1 / (totalGroup1 + totalGroup2);
             group = Mathf.RoundToInt(Random.Range(p1, p2) * 0.5f);
-            Debug.Log(string.Format("Random from {0} - {1} - {2}", p1, p2,group));
+            Debug.Log(string.Format("Random from {0} - {1} - {2}", p1, p2, group));
         }
         else
         {
             group = Mathf.RoundToInt(Random.Range(0f, 1f));
         }
 
-        RandomSpawnMonster(board.GetTile(x, y), group);
+        RandomSpawnMonster(emptyTile, group);
     }
 
     private void RandomSpawnMonster(GameTile tile, int group)

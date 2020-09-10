@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8769269814560497172}
   m_Layer: 0
   m_Name: MonsterAttack
-  m_TagString: Untagged
+  m_TagString: Bullet
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -44,6 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b40d37b3657aa5c47899e264e3972b20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsDone: 0
 --- !u!1 &7600489754723093023
 GameObject:
   m_ObjectHideFlags: 0
@@ -58,7 +59,7 @@ GameObject:
   - component: {fileID: 7600489754723093021}
   m_Layer: 0
   m_Name: Sphere
-  m_TagString: Untagged
+  m_TagString: Bullet
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -110,6 +111,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -146,7 +148,7 @@ GameObject:
   - component: {fileID: 7600489754954366245}
   m_Layer: 0
   m_Name: Model
-  m_TagString: Untagged
+  m_TagString: Bullet
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
