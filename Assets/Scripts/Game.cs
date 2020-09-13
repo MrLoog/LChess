@@ -6,7 +6,9 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
-
+    public static string TAG_MONSTER = "CubeMonster";
+    public static string TAG_BOARD = "Board";
+    public static string TAG_BULLET = "Bullet";
 
     public static Game Instance { get; private set; }
     public int MAX_RANDOM_SPAWN = 10;
@@ -25,7 +27,7 @@ public class Game : MonoBehaviour
     [SerializeField]
     WarFactory warFactory = default;
 
-    public List<Monster> monsters = new List<Monster>();
+    public MonsterManager monsterManager = new MonsterManager();
     public GameBullet gameBullet = new GameBullet();
 
     static Game instance;
@@ -99,7 +101,7 @@ public class Game : MonoBehaviour
                 _spawnCount++;
             }
         }
-       
+
     }
 
     bool RandomMode { get; set; } = false;
@@ -120,10 +122,10 @@ public class Game : MonoBehaviour
             {
                 emptyTile = null;
             }
-        } while (emptyTile == null && monsters.Count < ((boardSize.x) * (boardSize.y)));
+        } while (emptyTile == null && monsterManager.Total < ((boardSize.x) * (boardSize.y)));
         if (emptyTile == null) return;
-        int totalGroup1 = monsters.Where(a => a.Group == 0).Count();
-        int totalGroup2 = monsters.Where(a => a.Group == 1).Count();
+        int totalGroup1 = monsterManager.GetTotalGroup(0);
+        int totalGroup2 = monsterManager.GetTotalGroup(1);
 
         int group = 0;
         if (totalGroup1 + totalGroup2 > 0f)
@@ -145,14 +147,12 @@ public class Game : MonoBehaviour
     {
         Monster monster = monsterFactory.Get();
         monster.SpawnOn(tile);
-        Monster.CountMonster++;
-        monster.MonsterID = Monster.CountMonster;
+        monster.MonsterID = ++Monster.TotalMonster;
         monster.Group = group;
-        monsters.Add(monster);
+        monsterManager.Add(monster);
         monster.OnDestroyNotify.Attach(o =>
         {
-            monsters.Remove((Monster)o);
-            Debug.Log(string.Format("Listened And Remove {0}", monsters.Count));
+            monsterManager.Remove((Monster)o);
         });
 
         MonsterSight sight = new MonsterSight(monster, this);
@@ -162,18 +162,29 @@ public class Game : MonoBehaviour
     void HandleTouch()
     {
         GameTile tile = board.GetTile(TouchRay);
-        if (tile != null)
+        Monster remove = monsterManager.GetMonster(TouchRay);
+        if (remove != null)
         {
-            if (tile.Monster != null)
-            {
-                monsters.Remove(tile.Monster);
-                monsterFactory.Reclaim(tile.Monster);
-            }
-            else
-            {
-                RandomSpawnMonster(tile, Input.GetKey(KeyCode.LeftShift) ? 1 : 0);
-            }
+            monsterManager.Remove(remove);
+            monsterFactory.Reclaim(remove);
         }
+        else
+        {
+            RandomSpawnMonster(tile, Input.GetKey(KeyCode.LeftShift) ? 1 : 0);
+        }
+        //GameTile tile = Board.GetTile(TouchRay);
+        //if (tile != null)
+        //{
+        //    if (tile.Monster != null)
+        //    {
+        //        monsterManager.Remove(tile.Monster);
+        //        monsterFactory.Reclaim(tile.Monster);
+        //    }
+        //    else
+        //    {
+        //        RandomSpawnMonster(tile, Input.GetKey(KeyCode.LeftShift) ? 1 : 0);
+        //    }
+        //}
     }
 
 

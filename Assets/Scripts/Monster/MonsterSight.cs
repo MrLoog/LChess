@@ -19,9 +19,9 @@ public class MonsterSight
     {
         Monster foundEnemy = null;
         float distance = -1f;
-        for (var i = 0; i < Game.monsters.Count; i++)
+        for (var i = 0; i < Game.monsterManager.Total; i++)
         {
-            Monster mCheck = Game.monsters[i];
+            Monster mCheck = Game.monsterManager.GetAll()[i];
             if (mCheck.Group != Monster.Group && !mCheck.Equals(Monster))
             {
                 float newDistance = Vector3.Distance(Monster.transform.position, mCheck.transform.position);

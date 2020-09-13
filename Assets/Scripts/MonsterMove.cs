@@ -45,20 +45,5 @@ public class MonsterMove
         //}
         return true;
     }
-
-    public void StopMoving()
-    {
-        monster.Moving = false;
-
-        NavMeshAgent agent = monster.GetComponent<NavMeshAgent>();
-        agent.isStopped = true;
-    }
-
-    internal void StartMoving()
-    {
-        monster.Moving = true;
-
-        NavMeshAgent agent = monster.GetComponent<NavMeshAgent>();
-        agent.destination = target;
-    }
+    
 }

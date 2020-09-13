@@ -13,10 +13,16 @@ namespace Assets.Scripts.Component
         //scope
         //target type
         Monster Host { get; }
+        Action<object> OnTargetDestroy;
 
         public MonsterFindEnemy(Monster host)
         {
             Host = host;
+            OnTargetDestroy = (o) => {
+                Debug.Log("remove listen");
+                Host.TargetAttack.OnDestroyNotify.Detach(OnTargetDestroy);
+                Host.TargetAttack = null;
+            };
         }
 
         public override bool Update()
@@ -31,11 +37,13 @@ namespace Assets.Scripts.Component
         private bool IsNeedFindTarget()
         {
             if (!Host.BattleMode) return false;
+            /*
             if (Host.TargetAttack != null)
             {
                 //outside range
-                return Vector3.Distance(Host.transform.position,Host.TargetAttack.transform.position) > Host.RangeAttack;
+                return Vector3.Distance(Host.transform.position, Host.TargetAttack.transform.position) > Host.RangeAttack;
             }
+            */
             return true;
         }
 
@@ -81,13 +89,18 @@ namespace Assets.Scripts.Component
 
         private void MarkTargetAttack(Monster monster)
         {
+            if (Host.TargetAttack ==  monster) return;
+            if (Host.TargetAttack != null)
+            {
+                Debug.Log("Change Target");
+                Host.TargetAttack.OnDestroyNotify.Detach(OnTargetDestroy);
+                Host.ChangeState(Monster.MonsterState.Idle);
+            }
             Host.TargetAttack = monster;
             if (monster != null)
             {
-                Host.TargetAttack.OnDestroyNotify.Attach(o =>
-                {
-                    Host.TargetAttack = null;
-                });
+                Host.TargetAttack.OnDestroyNotify.Attach(OnTargetDestroy);
+                Host.ChangeState(Monster.MonsterState.Move);
             }
         }
     }

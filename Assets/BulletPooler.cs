@@ -55,6 +55,7 @@ public class BulletPooler : MonoBehaviour
             MonsterAttack newAttack = InstanceMonsterAttack();
             _currentAvaiable.NextAvaiable = newAttack;
             _lastAvaiable = newAttack;
+            Debug.Log("Extend bullet " + pooledObjects.Count);
         }
         obj.SetActive(true);
         return obj;
@@ -66,6 +67,7 @@ public class BulletPooler : MonoBehaviour
         if (attack == null) return;
         obj.SetActive(false);
         _lastAvaiable.NextAvaiable = attack;
+        attack.NextAvaiable = null;
         _lastAvaiable = attack;
 
     }

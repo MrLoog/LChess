@@ -30,32 +30,26 @@ namespace Assets.Scripts.Component
 
         public override bool Update()
         {
-
             if (IsHasTargetMoving())
             {
                 //Moving
-                Host.Moving = true;
+                Host.ChangeState(Monster.MonsterState.Move);
                 NavMeshAgent agent = Host.GetComponent<NavMeshAgent>();
                 //agent.destination = target;
                 agent.isStopped = false;
                 agent.SetDestination(target);
             }
-            if (Host.Moving && IsNeedStopMoving())
+            else if (IsEnemyInRangeAttack())
             {
                 //stop moving
-                Host.Moving = false;
 
                 NavMeshAgent agent = Host.GetComponent<NavMeshAgent>();
                 agent.isStopped = true;
+                Host.ChangeState(Monster.MonsterState.Attack);
             }
             return true;
         }
 
-        private bool IsNeedStopMoving()
-        {
-            return IsEnemyInRangeAttack();
-
-        }
 
         private bool IsEnemyInRangeAttack()
         {

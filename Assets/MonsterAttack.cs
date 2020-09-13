@@ -28,27 +28,12 @@ public class MonsterAttack : WarEntity, DealDmgAble
         IsDone = false;
         distance = Vector3.Distance(launchPoint, targetPoint);
         transform.localPosition = launchPoint;
+        progress = 0;
     }
 
     float progress = 0;
 
-    public bool GameUpdate()
-    {
-        if (IsDone) return false;
-        progress += Time.deltaTime;
-        float move = speed * progress / distance;
-        transform.localPosition = Vector3.LerpUnclamped(launchPoint, targetPoint, move);
-        if (move >= 1)
-        {
-            progress = 0;
-            IsDone = true;
-            MarkDone();
-            return false;
-        }
-
-        return true;
-    }
-
+   
 
     void Update()
     {

@@ -198,13 +198,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f67b5b1de251a2f448acc3e1249e298b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MonsterID: 0
+  SelectedMat: {fileID: 0}
   mat: {fileID: 2100000, guid: fb2c5f1eb494faf4b8d270866cb1e76a, type: 2}
   enemyMat: {fileID: 2100000, guid: 320d97e4d39f6d24c940223a94e970cf, type: 2}
+  MonsterID: 0
+  BattleMode: 0
   TargetAttack: {fileID: 0}
-  SelectedMat: {fileID: 0}
-  Moving: 0
+  RangeAttack: 3
   Health: 100
+  DefaultHealth: 100
+  AttackSpeed: 1
+  MovementSpeed: 1
+  State: 0
 --- !u!195 &473288042925725770
 NavMeshAgent:
   m_ObjectHideFlags: 0

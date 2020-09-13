@@ -8,38 +8,21 @@ public class OnCollision : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log("trigger");
         Monster m = gameObject.transform.parent.transform.parent.GetComponent<Monster>();
-        if (other.gameObject.CompareTag("Board")) { }
+        if (other.gameObject.CompareTag(Game.TAG_BOARD)) { }
 
         //else if (other.gameObject.CompareTag("CubeMonster"))
-        else if (other.gameObject.CompareTag("CubeMonster"))
+        else if (other.gameObject.CompareTag(Game.TAG_MONSTER))
         {
-            Monster enemy = other.transform.parent.transform.parent.GetComponent<Monster>();
-            if (m.TargetAttack != null && m.TargetAttack.MonsterID == enemy.MonsterID)
-            {
-                Transform parent = gameObject.transform, foundParent = null;
-                do
-                {
-                    parent = parent.transform.parent;
-                    if (parent != null && parent.name == "Monster")
-                    {
-                        foundParent = parent;
-                        Debug.Log("found");
-                    }
-                }
-                while (!(parent == null || foundParent != null));
-                if (m.MonsterMove != null)
-                {
-                    Debug.Log("found monster move");
-                    m.MonsterMove.StopMoving();
-                }
-            }
+            //Monster enemy = other.transform.parent.transform.parent.GetComponent<Monster>();
+            Monster enemy = FindObjScript.GetObjScriptFromCollider<Monster>(other);
         }
-        else if (other.gameObject.CompareTag("Bullet"))
+        else if (other.gameObject.CompareTag(Game.TAG_BULLET))
         {
-            MonsterAttack bullet = other.transform.parent.transform.parent.GetComponent<MonsterAttack>();
-            if (!m.Equals(bullet.Owner))
+            //MonsterAttack bullet = other.transform.parent.transform.parent.GetComponent<MonsterAttack>();
+            MonsterAttack bullet = FindObjScript.GetObjScriptFromCollider<MonsterAttack>(other);
+            //if (!m.Equals(bullet.Owner))
+            if (bullet.Owner != null && !m.Group.Equals(bullet.Owner.Group))
             {
                 bullet.ApplyDamage(m);
             }
@@ -49,13 +32,6 @@ public class OnCollision : MonoBehaviour
 
     void OnCollisionEnter(Collision info)
     {
-        info.rigidbody.velocity = Vector3.zero;
-        Monster m = gameObject.transform.parent.transform.parent.GetComponent<Monster>();
-        if (m.MonsterMove != null)
-        {
-            Debug.Log("found monster move");
-            m.MonsterMove.StopMoving();
-        }
     }
 
     void OnCollisionStay(Collision info)

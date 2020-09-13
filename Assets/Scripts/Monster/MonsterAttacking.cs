@@ -13,7 +13,7 @@ namespace Assets.Scripts.Component
         List<MonsterAttack> bullets;
         List<MonsterAttack> bulletsDone;
         public float CoolDown = 0;
-        public float AttackSpeed => Host.attackSpeed;
+        public float AttackSpeed => Host.AttackSpeed;
 
         public MonsterAttacking(Monster host)
         {
@@ -24,6 +24,7 @@ namespace Assets.Scripts.Component
 
         public override bool Update()
         {
+            if (!Host.State.Equals(Monster.MonsterState.Attack)) return true;
             if (IsCanAttack())
             {
                 CoolDown += Time.deltaTime;
@@ -80,11 +81,8 @@ namespace Assets.Scripts.Component
 
         private bool IsCanAttack()
         {
-
             //không có mục tiêu không attack
             if (Host.TargetAttack == null) return false;
-            //đang di chuyển không attack
-            if (Host.Moving) return false;
             return true;
         }
     }

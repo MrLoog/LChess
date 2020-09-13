@@ -16,17 +16,17 @@ public class GameBullet
 
     public bool Update()
     {
-        for (var i = 0; i < bullets.Count; i++)
-        {
-            if (bullets[i].IsDone)
-            {
-                bulletsDone.Add(bullets[i]);
-                continue;
-            }
-            bullets[i].GameUpdate();
-        }
-        bullets.RemoveAll(a => a.IsDone);
-        RecycleBullet();
+        //for (var i = 0; i < bullets.Count; i++)
+        //{
+        //    if (bullets[i].IsDone)
+        //    {
+        //        bulletsDone.Add(bullets[i]);
+        //        continue;
+        //    }
+        //    bullets[i].GameUpdate();
+        //}
+        //bullets.RemoveAll(a => a.IsDone);
+        //RecycleBullet();
         return true;
     }
 

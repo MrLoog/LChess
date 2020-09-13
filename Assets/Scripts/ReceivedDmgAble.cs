@@ -10,5 +10,6 @@ namespace Assets.Scripts
     {
         float GetCurrentHealth();
         void SetCurrentHealth(float health);
+        void ApplyDamage(float damage);
     }
 }
