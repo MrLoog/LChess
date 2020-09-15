@@ -44,7 +44,8 @@ public class Monster : MonoBehaviour, ReceivedDmgAble
     #region attribute monster statistic
     public float RangeAttack = 2f;
     public float Health = 100;
-    public float DefaultHealth = 10000;
+    public float MaxHealth = 100;
+    public float DefaultHealth = 100;
     public float AttackSpeed = 1f;
     public float MovementSpeed = 1f;
     public MonsterState State = MonsterState.Idle;
@@ -64,6 +65,7 @@ public class Monster : MonoBehaviour, ReceivedDmgAble
         tile.Monster = this;
         float rate = Random.Range(0.0f, 1.0f);
         Health = rate * DefaultHealth;
+        MaxHealth = Health;
         float size = 0.5f + 0.5f * rate;
         transform.localScale = new Vector3(size, size, size);
         OnDestroyNotify = new DestroyAbleObj(this);
@@ -85,6 +87,7 @@ public class Monster : MonoBehaviour, ReceivedDmgAble
 
     public void Start()
     {
+
     }
 
     //undetermine
