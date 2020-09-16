@@ -31,7 +31,6 @@ public class HealthBar : MonoBehaviour
         //fullTex.Apply();
         //progress_full = new GUIStyle();
         //progress_full.normal.background = fullTex;
-
     }
 
     private void Start()
