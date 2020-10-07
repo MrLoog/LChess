@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
 public class Game : MonoBehaviour
 {
     public static string TAG_MONSTER = "CubeMonster";
@@ -23,14 +22,21 @@ public class Game : MonoBehaviour
     [SerializeField]
     MonsterFactory monsterFactory = default;
 
+    [SerializeField]
+    ActionUnitFactory actionUnitFactory = default;
+
 
     [SerializeField]
     WarFactory warFactory = default;
 
     public MonsterManager monsterManager = new MonsterManager();
+    public ActionUnitManger ActionUnitManger = ActionUnitManger.Instance;
     public GameBullet gameBullet = new GameBullet();
 
     static Game instance;
+    List<TileUnitData> TileUnitDatas { get; set; }
+
+
 
     public static MonsterAttack SpawnMonsterAttack()
     {
@@ -38,6 +44,8 @@ public class Game : MonoBehaviour
         return attack;
     }
 
+    private KeyCode[] numberKeyCodes = new KeyCode[] { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
+    public int SelectedSpawnUnit = -1;
     void OnEnable()
     {
         instance = this;
@@ -54,6 +62,11 @@ public class Game : MonoBehaviour
 
         board.Initialize(boardSize);
         board.ShowGrid = true;
+
+        Resources.LoadAll<TileUnitData>("ScriptableObjects");
+        TileUnitDatas = Resources.FindObjectsOfTypeAll<TileUnitData>().ToList();
+        if (TileUnitDatas.Count == 0)
+            Debug.Log("Could not find any tile unit data scriptable objects");
     }
     void OnValidate()
     {
@@ -70,9 +83,29 @@ public class Game : MonoBehaviour
     Ray TouchRay => Camera.main.ScreenPointToRay(Input.mousePosition);
     void Update()
     {
+        // foreach (KeyCode kcode in System.Enum.GetValues(typeof(KeyCode)))
+        // {
+        //     if (Input.GetKeyDown(kcode))
+        //         Debug.Log("KeyCode down: " + kcode);
+
+
+        // }
+        for (int i = 0; i < numberKeyCodes.Length; ++i)
+        {
+            if (Input.GetKeyDown(numberKeyCodes[i]))
+            {
+                SelectedSpawnUnit = i;
+                Debug.Log(SelectedSpawnUnit.ToString() + " Pick " + GetUnitByKeyCode().name);
+                break;
+            }
+        }
         if (Input.GetKeyDown(KeyCode.G))
         {
             board.ShowGrid = !board.ShowGrid;
+        }
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            AllBattleMode();
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
@@ -93,6 +126,7 @@ public class Game : MonoBehaviour
                 _randomProcess = 0;
                 _spawnCount = 0;
                 RandomMode = false;
+                AllBattleMode();
             }
             else if (_randomProcess >= RandomDelay)
             {
@@ -104,8 +138,26 @@ public class Game : MonoBehaviour
 
     }
 
+
+    public void AllBattleMode()
+    {
+        for (int i = 0; i < ActionUnitManger.Total; i++)
+        {
+            ActionUnitManger.GetAll()[i].BattleMode = true;
+        }
+    }
+
+    internal void DestroyUnit(ActionUnit actionUnit)
+    {
+        if (!actionUnit)
+            return;
+        ActionUnitManger.Instance.Remove(actionUnit);
+        Destroy(actionUnit.gameObject);
+
+    }
+
     bool RandomMode { get; set; } = false;
-    float RandomDelay { get; set; } = 1f;
+    float RandomDelay { get; set; } = 0.1f;
     float _randomProcess = 0f;
     public float MaxTimeRandom { get; set; } = 30f;
     public float _cumUpTimeRandom { get; set; } = 0f;
@@ -118,7 +170,7 @@ public class Game : MonoBehaviour
             int x = Mathf.RoundToInt(Random.Range(0.0f, boardSize.x - 1));
             int y = Mathf.RoundToInt(Random.Range(0.0f, boardSize.y - 1));
             emptyTile = board.GetTile(x, y);
-            if (emptyTile.Monster != null)
+            if (emptyTile.Monster != null || emptyTile.ActionUnit != null)
             {
                 emptyTile = null;
             }
@@ -143,7 +195,7 @@ public class Game : MonoBehaviour
         RandomSpawnMonster(emptyTile, group);
     }
 
-    private void RandomSpawnMonster(GameTile tile, int group)
+    private void RandomSpawnMonster2(GameTile tile, int group)
     {
         Monster monster = monsterFactory.Get();
         monster.SpawnOn(tile);
@@ -159,7 +211,32 @@ public class Game : MonoBehaviour
         monster.EnterBattleMode(sight);
     }
 
-    void HandleTouch()
+    private ActionUnit RandomSpawnMonster(GameTile tile, int group)
+    {
+        ActionUnit monster = actionUnitFactory.Get();
+        monster.tileUnitData = GetUnitByKeyCode();
+        monster.SpawnOn(tile);
+        monster.UnitID = ++ActionUnit.TotalUnit;
+        monster.Group = group;
+        monster.SpawnCharacter();
+        ActionUnitManger.Add(monster);
+        return monster;
+    }
+
+    private TileUnitData GetUnitByKeyCode()
+    {
+        Debug.Log(SelectedSpawnUnit.ToString() + "/" + TileUnitDatas.Count);
+        if (SelectedSpawnUnit > -1 && SelectedSpawnUnit < TileUnitDatas.Count)
+        {
+            return TileUnitDatas[SelectedSpawnUnit];
+        }
+        else
+        {
+            return TileUnitDatas.PickRandom();
+        }
+    }
+
+    void HandleTouch2()
     {
         GameTile tile = board.GetTile(TouchRay);
         Monster remove = monsterManager.GetMonster(TouchRay);
@@ -167,6 +244,32 @@ public class Game : MonoBehaviour
         {
             monsterManager.Remove(remove);
             monsterFactory.Reclaim(remove);
+        }
+        else
+        {
+            RandomSpawnMonster(tile, Input.GetKey(KeyCode.LeftShift) ? 1 : 0);
+        }
+    }
+
+    void HandleTouch()
+    {
+        GameTile tile = board.GetTile(TouchRay);
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            Vector3 faceTarget = tile.transform.position;
+            // faceTarget.y = tile.transform.position.z;
+            // faceTarget.z = tile.transform.position.y;
+            for (int i = 0; i < ActionUnitManger.Total; i++)
+            {
+                ActionUnitManger.GetAll()[i].FaceTarget(faceTarget);
+            }
+            return;
+        }
+        ActionUnit remove = ActionUnitManger.GetUnit(TouchRay);
+        if (remove != null)
+        {
+            ActionUnitManger.Remove(remove);
+            actionUnitFactory.Reclaim(remove);
         }
         else
         {

@@ -13,6 +13,7 @@ public class GameTile : MonoBehaviour
     Transform arrow = default;
 
     public Monster Monster;
+    public ActionUnit ActionUnit;
 
     public GameTile NTile, NETile, ETile, ESTile, STile, SWTile, WTile, WNTile;
 

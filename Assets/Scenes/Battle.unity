@@ -419,7 +419,9 @@ MonoBehaviour:
   boardSize: {x: 11, y: 11}
   board: {fileID: 956351220}
   monsterFactory: {fileID: 11400000, guid: caa6452848000ec40bffcd4d222537c3, type: 2}
+  actionUnitFactory: {fileID: 11400000, guid: cb003ddef84f0cb43aab930a40156f9c, type: 2}
   warFactory: {fileID: 11400000, guid: 476decc2fc913114d8bb3616ec700f28, type: 2}
+  SelectedSpawnUnit: -1
 --- !u!4 &1256947446
 Transform:
   m_ObjectHideFlags: 0
