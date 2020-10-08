@@ -145,8 +145,9 @@ public class ActionUnit : MonoBehaviour
     public bool ChangeState(UnitState newState)
     {
         if (newState.Equals(State)) return true;
+
         UnitState oldState = State;
-        if (oldState.Equals(UnitState.Attack))
+        if (oldState.Equals(UnitState.Attack) || oldState.Equals(UnitState.Idle))
         {
             GetComponent<NavMeshObstacle>().enabled = false;
             GetComponent<NavMeshAgent>().enabled = true;
@@ -158,12 +159,15 @@ public class ActionUnit : MonoBehaviour
         {
             case UnitState.Idle:
                 _currentState = _idleState;
+                GetComponent<NavMeshAgent>().enabled = false;
+                GetComponent<NavMeshObstacle>().enabled = true;
                 AnimateIdle();
                 break;
             case UnitState.Attack:
                 _currentState = _attackState;
                 GetComponent<NavMeshAgent>().enabled = false;
                 GetComponent<NavMeshObstacle>().enabled = true;
+                _characterAnimationEventCalls.InvokeOnAction(CharacterAnimationEventCalls.K_STATE_ATTACK_IN);
                 AnimateAttack();
                 break;
             case UnitState.Move:
@@ -263,6 +267,7 @@ public class ActionUnit : MonoBehaviour
             }
             else if (Time.time - _host.TimeOfLastAttack > ((ActionUnitData)_host.tileUnitData).baseAttackRate)
             {
+                Debug.DrawLine(_host.transform.position, _host.TargetAttack.transform.position, Color.red, 0.5f);
                 _host.AnimateAttack();
                 // _host._characterAnimationEventCalls.OnAttack.AddListener(_attackUnit.DamageTarget);
                 _host.TimeOfLastAttack = Time.time;
@@ -280,6 +285,8 @@ public class ActionUnit : MonoBehaviour
 
     class MoveState : IActionUnitState
     {
+        private Vector3 _lastPosition;
+        private float _timeStuck = 0;
         ActionUnit _host;
 
         public MoveState(ActionUnit host)
@@ -288,7 +295,28 @@ public class ActionUnit : MonoBehaviour
         }
         public void Update()
         {
+            _timeStuck += Time.deltaTime;
+            if (_timeStuck >= 1f)
+            {
+                if (_lastPosition == null)
+                {
+                    _lastPosition = _host.transform.position;
+                    _timeStuck = 0;
+                }
+                else
+                {
+                    if ((_host.transform.position - _lastPosition).sqrMagnitude <= 1f)
+                    {
+                        Debug.Log("Stuck, change Target");
+                        _host.GetComponent<ActionUnitFindTarget>().CheckPathEnable = true;
+                    }
+                    _lastPosition = _host.transform.position;
+                    _timeStuck = 0;
+                }
+            }
+            Debug.DrawLine(_host.transform.position, _host.TargetAttack.transform.position, Color.green);
         }
+
         public void Enable()
         {
         }

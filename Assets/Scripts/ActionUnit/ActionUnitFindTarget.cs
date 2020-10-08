@@ -2,15 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class ActionUnitFindTarget : MonoBehaviour
 {
 
     private ActionUnit Host;
+
+    public bool CheckPathEnable = false;
+
+    public bool LockTarget = false;
+
     // Start is called before the first frame update
     void Start()
     {
         Host = gameObject.GetComponent<ActionUnit>();
+        CharacterAnimationEventCalls eventUnit = gameObject.GetComponentInChildren<CharacterAnimationEventCalls>();
+        eventUnit.RegisterListener(CharacterAnimationEventCalls.K_STATE_ATTACK_IN).AddListener(UnlockTarget);
+
     }
 
     // Update is called once per frame
@@ -37,10 +46,55 @@ public class ActionUnitFindTarget : MonoBehaviour
 
     bool AcquireTarget()
     {
-        ActionUnit closest = ActionUnitManger.Instance.GetAll()
-                    .Where(x => x.UnitID != Host.UnitID && x.Group != Host.Group && x.Alive)
-                    .OrderBy(x => (Host.transform.position - x.transform.position).magnitude)
-                    .FirstOrDefault();
+        if (!CheckPathEnable && LockTarget && Host.TargetAttack != null && Host.TargetAttack.Alive) return true;
+        ActionUnit closest = null;
+        IOrderedEnumerable<ActionUnit> potentialTarget = ActionUnitManger.Instance.GetAll()
+                        .Where(x => x.UnitID != Host.UnitID && x.Group != Host.Group && x.Alive)
+                        .OrderBy(x => (Host.transform.position - x.transform.position).magnitude);
+        NavMeshAgent nma = Host.GetComponent<NavMeshAgent>();
+        NavMeshObstacle nmo = Host.GetComponent<NavMeshObstacle>();
+        if (!CheckPathEnable)
+        {
+            closest = potentialTarget.FirstOrDefault();
+
+        }
+        else
+        {
+            bool stateNma = nma.enabled;
+            if (!stateNma)
+            {
+                nmo.enabled = false;
+                nma.enabled = true;
+            }
+            NavMeshPath path = new NavMeshPath();
+            Debug.Log(string.Format("find target check path {0}", potentialTarget.Count()));
+            foreach (ActionUnit checkTarget in potentialTarget)
+            {
+                nma.ResetPath();
+                nma.CalculatePath(checkTarget.transform.position, path);
+                if (path.status.Equals(NavMeshPathStatus.PathComplete))
+                {
+                    closest = checkTarget;
+                    LockTarget = true;
+                    CheckPathEnable = false;
+                    Debug.Log("Found Target have path");
+                    for (int i = 0; i < path.corners.Length - 1; i++)
+                    {
+                        Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.yellow, 1f);
+                    }
+                    break;
+                }
+                else
+                {
+                    Debug.Log("Found Target cant reach");
+                }
+            }
+            if (!stateNma)
+            {
+                nma.enabled = false;
+                nmo.enabled = true;
+            }
+        }
 
         if (closest)
         {
@@ -49,6 +103,15 @@ public class ActionUnitFindTarget : MonoBehaviour
         }
         MarkTargetAttack(null);
         return false;
+    }
+
+    public void UnlockTarget()
+    {
+        Debug.Log("Unlock target");
+        CheckPathEnable = false;
+        LockTarget = false;
+        // CharacterAnimationEventCalls eventUnit = GetComponentInChildren<CharacterAnimationEventCalls>();
+        // eventUnit.RegisterListener(CharacterAnimationEventCalls.K_STATE_ATTACK_IN).RemoveListener(UnlockTarget);
     }
 
     bool AcquireTargetOld()

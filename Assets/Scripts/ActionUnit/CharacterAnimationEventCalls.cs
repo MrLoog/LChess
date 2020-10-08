@@ -12,6 +12,7 @@ public class CharacterAnimationEventCalls : MonoBehaviour
 
     public const string K_ACTION_ATTACK = "ATTACK";
     public const string K_ACTION_DIE = "DIE";
+    public const string K_STATE_ATTACK_IN = "STATE_ATTACK_IN";
 
 
     void InvokeOnAttack()
@@ -34,7 +35,7 @@ public class CharacterAnimationEventCalls : MonoBehaviour
     }
 
 
-    void InvokeOnAction(string action)
+    public void InvokeOnAction(string action)
     {
         Debug.Log("Invoke Action " + action);
         if (ActionDict.Keys.ToList().Contains(action))

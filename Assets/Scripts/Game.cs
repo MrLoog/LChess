@@ -107,6 +107,10 @@ public class Game : MonoBehaviour
         {
             AllBattleMode();
         }
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            RandomSpawn2GroupEqual();
+        }
         if (Input.GetKeyDown(KeyCode.R))
         {
             RandomMode = !RandomMode;
@@ -193,6 +197,22 @@ public class Game : MonoBehaviour
         }
 
         RandomSpawnMonster(emptyTile, group);
+    }
+
+    private void RandomSpawn2GroupEqual()
+    {
+        GameTile spawnTile = null;
+        int group = 0;
+        for (int i = 0; i < MAX_RANDOM_SPAWN; i++)
+        {
+            group = i % 2 == 0 ? 0 : 1;
+
+            spawnTile = board.GetEmptyTileGroup(group);
+            if (spawnTile != null)
+            {
+                RandomSpawnMonster(spawnTile, group).transform.localRotation = Quaternion.Euler(0, group == 1 ? 180f : 0, 0);
+            }
+        }
     }
 
     private void RandomSpawnMonster2(GameTile tile, int group)

@@ -111,4 +111,29 @@ public class Board : MonoBehaviour
 
 
     GameTile[] tiles;
+
+    internal GameTile GetEmptyTileGroup(int group)
+    {
+        int count = 0;
+        int xFrom = group == 0 ? 0 : 10;
+        int reverse = group == 0 ? 1 : -1;
+        GameTile emptyTile = null;
+        do
+        {
+            count++;
+            for (int i = 0; i < Size.x; i++)
+            {
+                emptyTile = tiles[xFrom * Size.x + i];
+                if (emptyTile.Monster != null || emptyTile.ActionUnit != null)
+                {
+                    emptyTile = null;
+                    continue;
+                }
+                return emptyTile;
+            }
+            xFrom = xFrom + reverse * 1;
+
+        } while (emptyTile == null && count < 3);
+        return null;
+    }
 }
