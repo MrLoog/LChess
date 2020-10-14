@@ -12,6 +12,7 @@ public class ActionUnitFindTarget : MonoBehaviour
     public bool CheckPathEnable = false;
 
     public bool LockTarget = false;
+    List<int> _unreachable = new List<int>();
 
     // Start is called before the first frame update
     void Start()
@@ -46,58 +47,22 @@ public class ActionUnitFindTarget : MonoBehaviour
 
     bool AcquireTarget()
     {
-        if (!CheckPathEnable && LockTarget && Host.TargetAttack != null && Host.TargetAttack.Alive) return true;
         ActionUnit closest = null;
         IOrderedEnumerable<ActionUnit> potentialTarget = ActionUnitManger.Instance.GetAll()
                         .Where(x => x.UnitID != Host.UnitID && x.Group != Host.Group && x.Alive)
                         .OrderBy(x => (Host.transform.position - x.transform.position).magnitude);
         NavMeshAgent nma = Host.GetComponent<NavMeshAgent>();
         NavMeshObstacle nmo = Host.GetComponent<NavMeshObstacle>();
-        if (!CheckPathEnable)
-        {
-            closest = potentialTarget.FirstOrDefault();
-
-        }
-        else
-        {
-            bool stateNma = nma.enabled;
-            if (!stateNma)
-            {
-                nmo.enabled = false;
-                nma.enabled = true;
-            }
-            NavMeshPath path = new NavMeshPath();
-            Debug.Log(string.Format("find target check path {0}", potentialTarget.Count()));
-            foreach (ActionUnit checkTarget in potentialTarget)
-            {
-                nma.ResetPath();
-                nma.CalculatePath(checkTarget.transform.position, path);
-                if (path.status.Equals(NavMeshPathStatus.PathComplete))
-                {
-                    closest = checkTarget;
-                    LockTarget = true;
-                    CheckPathEnable = false;
-                    Debug.Log("Found Target have path");
-                    for (int i = 0; i < path.corners.Length - 1; i++)
-                    {
-                        Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.yellow, 1f);
-                    }
-                    break;
-                }
-                else
-                {
-                    Debug.Log("Found Target cant reach");
-                }
-            }
-            if (!stateNma)
-            {
-                nma.enabled = false;
-                nmo.enabled = true;
-            }
-        }
-
+        closest = potentialTarget.Where(x => _unreachable.IndexOf(x.UnitID) == -1).FirstOrDefault();
         if (closest)
         {
+            MarkTargetAttack(closest);
+            return true;
+        }
+        closest = potentialTarget.FirstOrDefault();
+        if (closest)
+        {
+            _unreachable.Clear(); //k tìm thấy mục tiêu thay thế thì giữ nguyên
             MarkTargetAttack(closest);
             return true;
         }
@@ -110,6 +75,7 @@ public class ActionUnitFindTarget : MonoBehaviour
         Debug.Log("Unlock target");
         CheckPathEnable = false;
         LockTarget = false;
+        _unreachable.Clear();
         // CharacterAnimationEventCalls eventUnit = GetComponentInChildren<CharacterAnimationEventCalls>();
         // eventUnit.RegisterListener(CharacterAnimationEventCalls.K_STATE_ATTACK_IN).RemoveListener(UnlockTarget);
     }
@@ -177,5 +143,10 @@ public class ActionUnitFindTarget : MonoBehaviour
 
             }
         }
+    }
+
+    internal void MarkCantReachTarget(ActionUnit targetAttack)
+    {
+        _unreachable.Add(targetAttack.UnitID);
     }
 }

@@ -415,7 +415,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f72846da6ece8c049a741ebc0817f433, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MAX_RANDOM_SPAWN: 44
+  MAX_RANDOM_SPAWN: 66
   boardSize: {x: 11, y: 11}
   board: {fileID: 956351220}
   monsterFactory: {fileID: 11400000, guid: caa6452848000ec40bffcd4d222537c3, type: 2}

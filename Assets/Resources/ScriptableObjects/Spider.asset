@@ -17,5 +17,5 @@ MonoBehaviour:
     type: 3}
   baseHealth: 300
   baseAttack: 50
-  baseAttackRange: 6
+  baseAttackRange: 4
   baseAttackRate: 0.5

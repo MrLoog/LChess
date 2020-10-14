@@ -308,7 +308,7 @@ public class ActionUnit : MonoBehaviour
                     if ((_host.transform.position - _lastPosition).sqrMagnitude <= 1f)
                     {
                         Debug.Log("Stuck, change Target");
-                        _host.GetComponent<ActionUnitFindTarget>().CheckPathEnable = true;
+                        _host.GetComponent<ActionUnitFindTarget>().MarkCantReachTarget(_host.TargetAttack);
                     }
                     _lastPosition = _host.transform.position;
                     _timeStuck = 0;

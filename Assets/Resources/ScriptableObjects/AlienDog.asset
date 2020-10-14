@@ -15,7 +15,7 @@ MonoBehaviour:
   unitName: 
   characterPrefab: {fileID: 1487260194191106087, guid: 85a4b973960dac04f86575b26038e2e7,
     type: 3}
-  baseHealth: 2000
+  baseHealth: 1000
   baseAttack: 100
   baseAttackRange: 2
   baseAttackRate: 1
