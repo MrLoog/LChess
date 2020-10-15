@@ -143,11 +143,26 @@ public class Game : MonoBehaviour
     }
 
 
-    public void AllBattleMode()
+    public void AllBattleMode(bool IsBattle = true)
     {
         for (int i = 0; i < ActionUnitManger.Total; i++)
         {
-            ActionUnitManger.GetAll()[i].BattleMode = true;
+            ActionUnitManger.GetAll()[i].BattleMode = IsBattle;
+        }
+        MainMenuControl.Instance.ScanAndShow(true);
+    }
+
+    public void ClearBoard()
+    {
+        List<ActionUnit> destroy = new List<ActionUnit>();
+        foreach (ActionUnit u in ActionUnitManger.GetAll())
+        {
+            u.BattleMode = false;
+            destroy.Add(u);
+        }
+        foreach (ActionUnit u in destroy)
+        {
+            DestroyUnit(u);
         }
     }
 
@@ -164,6 +179,8 @@ public class Game : MonoBehaviour
     float RandomDelay { get; set; } = 0.1f;
     float _randomProcess = 0f;
     public float MaxTimeRandom { get; set; } = 30f;
+
+
     public float _cumUpTimeRandom { get; set; } = 0f;
 
     private void RandomSpawn()
@@ -199,7 +216,7 @@ public class Game : MonoBehaviour
         RandomSpawnMonster(emptyTile, group);
     }
 
-    private void RandomSpawn2GroupEqual()
+    public void RandomSpawn2GroupEqual()
     {
         GameTile spawnTile = null;
         int group = 0;
@@ -213,6 +230,7 @@ public class Game : MonoBehaviour
                 RandomSpawnMonster(spawnTile, group).transform.localRotation = Quaternion.Euler(0, group == 1 ? 180f : 0, 0);
             }
         }
+        MainMenuControl.Instance.ScanAndShow(true);
     }
 
     private void RandomSpawnMonster2(GameTile tile, int group)
@@ -259,6 +277,7 @@ public class Game : MonoBehaviour
     void HandleTouch2()
     {
         GameTile tile = board.GetTile(TouchRay);
+        if (tile == null) return;
         Monster remove = monsterManager.GetMonster(TouchRay);
         if (remove != null)
         {
@@ -274,6 +293,7 @@ public class Game : MonoBehaviour
     void HandleTouch()
     {
         GameTile tile = board.GetTile(TouchRay);
+        if (tile == null) return;
         if (Input.GetKey(KeyCode.LeftControl))
         {
             Vector3 faceTarget = tile.transform.position;
