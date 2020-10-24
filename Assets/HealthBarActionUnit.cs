@@ -28,7 +28,8 @@ public class HealthBarActionUnit : MonoBehaviour
 
         slider.position = Camera.main.WorldToScreenPoint(gameObject.transform.position);
 
-        ActionUnitData origin = (ActionUnitData)_host.tileUnitData;
+        // ActionUnitData origin = (ActionUnitData)_host.tileUnitData;
+        ActionUnitData origin = (ActionUnitData)_host.OriginStatus;
         ActionUnitData current = _host.CurrentStatus;
         uiSlider.value = (current.baseHealth >= 0 ? uiSlider.maxValue * current.baseHealth / origin.baseHealth : uiSlider.minValue);
         

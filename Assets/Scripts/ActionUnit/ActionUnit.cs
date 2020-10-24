@@ -22,7 +22,23 @@ public class ActionUnit : MonoBehaviour
     public int Group = 0;
     public int UnitID;
     public TileUnitData tileUnitData { get; internal set; }
-    public ActionUnitData CurrentStatus;
+
+    public ActionUnitData OriginStatus = default;
+    private ActionUnitData _currentStatus;
+    public ActionUnitData CurrentStatus
+    {
+        get
+        {
+            return _currentStatus;
+        }
+        set
+        {
+            OriginStatus = (ActionUnitData)ScriptableObject.CreateInstance(typeof(ActionUnitData));
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(value), OriginStatus);
+            _currentStatus = value;
+        }
+    }
+    public ActionUnitData SavedStatus;
     public Transform characterPrefabParent;
     protected Animator _animator;
     private CharacterAnimationEventCalls _characterAnimationEventCalls;
@@ -45,6 +61,11 @@ public class ActionUnit : MonoBehaviour
     public int MonstersLayerMask { get; private set; }
     public bool Alive => CurrentStatus.baseHealth > 0;
 
+    public bool IsRealDestroy { get; set; } = true;
+    public GameTile TilePos { get; set; }
+
+    public ActionUnit MirrorEnemy;
+
     private float TimeOfLastAttack;
 
     private void Awake()
@@ -59,6 +80,7 @@ public class ActionUnit : MonoBehaviour
     public void SpawnOn(GameTile tile)
     {
         tile.ActionUnit = this;
+        this.TilePos = tile;
         transform.localPosition = tile.transform.localPosition;
     }
 
@@ -77,6 +99,19 @@ public class ActionUnit : MonoBehaviour
         _currentState.Update();
     }
 
+    private void DrawCircle(Vector3 position, float radius)
+    {
+        var increment = 10;
+        for (int angle = 0; angle < 360; angle = angle + increment)
+        {
+            var heading = Vector3.forward - position;
+            var direction = heading / heading.magnitude;
+            var point = position + Quaternion.Euler(0, angle, 0) * Vector3.forward * radius;
+            var point2 = position + Quaternion.Euler(0, angle + increment, 0) * Vector3.forward * radius;
+            Debug.DrawLine(point, point2, Color.red);
+        }
+    }
+
     public void SpawnCharacter()
     {
         if (tileUnitData && characterPrefabParent)
@@ -85,8 +120,12 @@ public class ActionUnit : MonoBehaviour
             characterPrefabParent.transform.ChangeLayersRecursively(gameObject.layer);
 
             _animator = GetComponentInChildren<Animator>();
-            CurrentStatus = new ActionUnitData();
-            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(tileUnitData), CurrentStatus);
+            if (CurrentStatus == null)
+            {
+                ActionUnitData newData = new ActionUnitData();
+                JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(tileUnitData), newData);
+                CurrentStatus = newData;
+            }
             _characterAnimationEventCalls = GetComponentInChildren<CharacterAnimationEventCalls>();
             _characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_ATTACK).AddListener(AttackApplyDamage);
         }
@@ -125,14 +164,27 @@ public class ActionUnit : MonoBehaviour
         // StartCoroutine(Destroy());
     }
 
-    void Destroy()
+    public void Revive()
+    {
+        Debug.Log(UnitID + " Revive ");
+        GetComponent<ActionUnitFindTarget>().enabled = true;
+        GetComponent<ActionUnitMove>().enabled = true;
+        GetComponent<ActionUnitAttack>().enabled = true;
+
+        // StartCoroutine(Destroy());
+    }
+
+    public void Destroy()
     {
         // yield return new WaitForSeconds(0.5f);
         // yield return new WaitForSeconds(0.5f);
         // _characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_ATTACK).RemoveListener(AttackApplyDamage);
         // _characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_DIE).RemoveListener(Destroy);
         Debug.Log("Die and Destroy");
-        Game.Instance.DestroyUnit(this);
+        if (IsRealDestroy)
+            Game.Instance.DestroyUnit(this);
+        else
+            gameObject.SetActive(false);
     }
 
 
@@ -212,12 +264,27 @@ public class ActionUnit : MonoBehaviour
         FaceTarget(TargetAttack.transform.position);
     }
 
+    public bool AddBuff(Buff buff)
+    {
+        return true;
+    }
+
     public void FaceTarget(Vector3 destination)
     {
         Vector3 lookPos = destination - transform.position;
         lookPos.y = 0;
         Quaternion rotation = Quaternion.LookRotation(lookPos);
         transform.rotation = Quaternion.Lerp(transform.rotation, rotation, 1f);
+    }
+
+    public bool ForceSelectTarget(ActionUnit target)
+    {
+        if (target == null
+        || !target.Alive
+        || target.Group == Group) return false;
+        gameObject.GetComponent<ActionUnitFindTarget>().LockToDeath = true;
+        gameObject.GetComponent<ActionUnitFindTarget>().MarkTargetAttack(target);
+        return true;
     }
 
     interface IActionUnitState

@@ -12,10 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbbff47cdf468a844a31bcfcd0f6481c, type: 3}
   m_Name: Grenadier
   m_EditorClassIdentifier: 
-  unitName: 
+  unitName: Grenadier
   characterPrefab: {fileID: 8594977971742873870, guid: f65a54a4e757c2a49abefee79a264648,
     type: 3}
-  baseHealth: 1500
+  baseHealth: 1200
   baseAttack: 200
   baseAttackRange: 2
-  baseAttackRate: 2
+  baseAttackRate: 1.5
+  gold: 150
+  description: 
+  Level: 1
+  NextLevel: {fileID: 11400000, guid: 173e8e7d9fd1385469437bf02f8f5d29, type: 2}
+  PrevLevel: {fileID: 0}

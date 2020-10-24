@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbbff47cdf468a844a31bcfcd0f6481c, type: 3}
+  m_Name: EllenLv2
+  m_EditorClassIdentifier: 
+  unitName: Ellen
+  characterPrefab: {fileID: 5942712507454262125, guid: 3888bb6a988bde14fa9a5eb0cb7ccfb6,
+    type: 3}
+  baseHealth: 1500
+  baseAttack: 220
+  baseAttackRange: 2
+  baseAttackRate: 0.5
+  gold: 100
+  description: 
+  Level: 2
+  NextLevel: {fileID: 11400000, guid: dc9e8d9dabe19674c84849d43f43b2df, type: 2}
+  PrevLevel: {fileID: 11400000, guid: 436e829c2e640b74fa29c7de0419577c, type: 2}

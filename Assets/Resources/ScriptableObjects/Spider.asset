@@ -12,10 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbbff47cdf468a844a31bcfcd0f6481c, type: 3}
   m_Name: Spider
   m_EditorClassIdentifier: 
-  unitName: 
+  unitName: Spider
   characterPrefab: {fileID: 7769770407861038690, guid: e180ba4ab1153c64e99b8289666e44f6,
     type: 3}
   baseHealth: 300
   baseAttack: 50
   baseAttackRange: 4
   baseAttackRate: 0.5
+  gold: 80
+  description: 
+  Level: 1
+  NextLevel: {fileID: 11400000, guid: a183ed167dc6e2d4d9b9f70684598370, type: 2}
+  PrevLevel: {fileID: 0}

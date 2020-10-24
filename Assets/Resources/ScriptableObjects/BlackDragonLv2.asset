@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbbff47cdf468a844a31bcfcd0f6481c, type: 3}
+  m_Name: BlackDragonLv2
+  m_EditorClassIdentifier: 
+  unitName: Black Dragon
+  characterPrefab: {fileID: 7618279370295971174, guid: 10711bd59de9a5e4a99ab061da10af01,
+    type: 3}
+  baseHealth: 5000
+  baseAttack: 1000
+  baseAttackRange: 3
+  baseAttackRate: 1.2
+  gold: 300
+  description: 
+  Level: 2
+  NextLevel: {fileID: 11400000, guid: dc0011fa1f3ea2547bb1a77786c9a42b, type: 2}
+  PrevLevel: {fileID: 11400000, guid: 75e9015fb78e0c74fa5d36f229fb24f9, type: 2}

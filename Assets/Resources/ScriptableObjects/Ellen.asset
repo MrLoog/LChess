@@ -15,7 +15,12 @@ MonoBehaviour:
   unitName: Ellen
   characterPrefab: {fileID: 5942712507454262125, guid: 3888bb6a988bde14fa9a5eb0cb7ccfb6,
     type: 3}
-  baseHealth: 600
+  baseHealth: 400
   baseAttack: 50
   baseAttackRange: 2
-  baseAttackRate: 0.8
+  baseAttackRate: 0.5
+  gold: 100
+  description: 
+  Level: 1
+  NextLevel: {fileID: 11400000, guid: 54ef1912e97a5144f9fb9f61a2eefd1d, type: 2}
+  PrevLevel: {fileID: 0}

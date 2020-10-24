@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Board : MonoBehaviour
 {
@@ -83,6 +85,9 @@ public class Board : MonoBehaviour
             tile.ESTile = (tile.STile != null) ? tile.STile.ETile : null;
             tile.SWTile = (tile.STile != null) ? tile.STile.WTile : null;
         }
+
+
+        MarkPrepareTile();
     }
 
     internal GameTile GetTile(int x, int y)
@@ -111,11 +116,12 @@ public class Board : MonoBehaviour
 
 
     GameTile[] tiles;
+    public int MaxRowArea = 3;
 
     internal GameTile GetEmptyTileGroup(int group)
     {
         int count = 0;
-        int xFrom = group == 0 ? 0 : 10;
+        int xFrom = group == 0 ? 0 : (Size.y - 1);
         int reverse = group == 0 ? 1 : -1;
         GameTile emptyTile = null;
         do
@@ -133,7 +139,92 @@ public class Board : MonoBehaviour
             }
             xFrom = xFrom + reverse * 1;
 
-        } while (emptyTile == null && count < 3);
+        } while (emptyTile == null && count < MaxRowArea);
         return null;
+    }
+
+    internal GameTile GetRandomEmptyTileGroup(int group)
+    {
+
+        int max = Size.x * MaxRowArea;
+        int indexMin = group == 0 ? 0 : (Size.y * Size.x - max);
+        int indexMax = group == 0 ? max : (Size.y * Size.x);
+
+        List<GameTile> validTiles = tiles.Select((tile, index) => new
+        {
+            Tile = tile,
+            i = index
+        }).Where(a => a.i >= indexMin && a.i < indexMax && a.Tile.Monster == null && a.Tile.ActionUnit == null)
+        .Select(a => a.Tile)
+        .ToList();
+        if (validTiles.Count == 0) return null;
+
+        int randomIndex = Random.Range(0, validTiles.Count - 1);
+        return validTiles[randomIndex];
+    }
+
+    public GameTile GetBattleTileGroup(int group)
+    {
+        int max = Size.x * MaxRowArea;
+        int indexMin = group == 0 ? (Size.x) : (Size.y * Size.x - max - Size.y);
+        int indexMax = group == 0 ? (max + Size.x) : (Size.y * Size.x - Size.y);
+
+        List<GameTile> validTiles = GetBattleTilesGroup(group, true);
+
+        if (validTiles.Count == 0) return null;
+
+        int randomIndex = Random.Range(0, validTiles.Count - 1);
+        return validTiles[randomIndex];
+    }
+
+
+    public List<GameTile> GetBattleTilesGroup(int group, bool empty = false)
+    {
+        int max = Size.x * MaxRowArea;
+        int indexMin = group == 0 ? (Size.x) : (Size.y * Size.x - max - Size.y);
+        int indexMax = group == 0 ? (max + Size.x) : (Size.y * Size.x - Size.y);
+        if (group == -1)
+        {
+            indexMin = Size.x;
+            indexMax = Size.y * Size.x;
+        }
+
+        return tiles.Select((tile, index) => new
+        {
+            Tile = tile,
+            i = index
+        }).Where(a => a.i >= indexMin && a.i < indexMax && (!empty || (a.Tile.Monster == null && a.Tile.ActionUnit == null)))
+        .Select(a => a.Tile)
+        .ToList();
+    }
+
+    private void MarkPrepareTile()
+    {
+        int max = Size.x * 1;
+        int indexMin = 0;
+        int indexMax = max;
+
+        tiles.Select((tile, index) => new
+        {
+            Tile = tile,
+            i = index
+        }).Where(a => a.i >= indexMin && a.i < indexMax)
+        .Select(a => a.Tile)
+        .ToList().ForEach(x => x.PrepareTile = true);
+    }
+
+    public GameTile GetPrepareTile()
+    {
+        List<GameTile> validTiles = tiles.Select((tile, index) => new
+        {
+            Tile = tile,
+            i = index
+        }).Where(a => a.Tile.PrepareTile && a.Tile.Monster == null && a.Tile.ActionUnit == null)
+        .Select(a => a.Tile)
+        .ToList();
+        if (validTiles.Count == 0) return null;
+
+        int randomIndex = Random.Range(0, validTiles.Count - 1);
+        return validTiles[randomIndex];
     }
 }

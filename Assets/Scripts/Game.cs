@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
+
 public class Game : MonoBehaviour
 {
     public static string TAG_MONSTER = "CubeMonster";
@@ -14,10 +16,38 @@ public class Game : MonoBehaviour
     private int _spawnCount = 0;
 
     [SerializeField]
+    public bool _roundMode;
+
+    public bool RoundMode
+    {
+        get
+        {
+            return _roundMode;
+        }
+        set
+        {
+            ClearBoard();
+            RoundManager.Instance.Reset();
+            _roundMode = value;
+        }
+    }
+
+
+    public Material MatGroup1;
+    public Material MatGroup2;
+
+    internal Material GetMatForGroup(int group)
+    {
+        return group == 0 ? MatGroup1 : MatGroup2;
+    }
+
+
+
+    [SerializeField]
     public Vector2Int boardSize = new Vector2Int(11, 11);
 
     [SerializeField]
-    Board board = default;
+    public Board board = default;
 
     [SerializeField]
     MonsterFactory monsterFactory = default;
@@ -31,12 +61,35 @@ public class Game : MonoBehaviour
 
     public MonsterManager monsterManager = new MonsterManager();
     public ActionUnitManger ActionUnitManger = ActionUnitManger.Instance;
+
+    public RoundManager RoundManager;
     public GameBullet gameBullet = new GameBullet();
 
     static Game instance;
-    List<TileUnitData> TileUnitDatas { get; set; }
+    public List<TileUnitData> TileUnitDatas { get; set; }
 
+    public TileUnitData PickupUnit;
+    public GameObject PickupModel;
 
+    public GameObject GrabUnit;
+    public float _accumGrabTime;
+    public bool _isGrab;
+
+    private bool _onGame;
+    public bool OnGame
+    {
+        get
+        {
+            return _onGame;
+        }
+        set
+        {
+            MainMenuControl.Instance.ShowGameState(value);
+            _onGame = value;
+        }
+    }
+
+    public ActionUnitEvent OnUnitSelected = new ActionUnitEvent();
 
     public static MonsterAttack SpawnMonsterAttack()
     {
@@ -44,7 +97,8 @@ public class Game : MonoBehaviour
         return attack;
     }
 
-    private KeyCode[] numberKeyCodes = new KeyCode[] { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
+    public RoundPlan Plan;
+
     public int SelectedSpawnUnit = -1;
     void OnEnable()
     {
@@ -64,9 +118,22 @@ public class Game : MonoBehaviour
         board.ShowGrid = true;
 
         Resources.LoadAll<TileUnitData>("ScriptableObjects");
-        TileUnitDatas = Resources.FindObjectsOfTypeAll<TileUnitData>().ToList();
+        TileUnitDatas = Resources.FindObjectsOfTypeAll<ActionUnitData>().Where(x => x.Level == 1).Cast<TileUnitData>().ToList();
         if (TileUnitDatas.Count == 0)
             Debug.Log("Could not find any tile unit data scriptable objects");
+
+
+        RegisterEvent();
+    }
+
+    private void Start()
+    {
+        RoundManager = RoundManager.Instance;
+    }
+
+    private void RegisterEvent()
+    {
+        OnUnitSelected.AddListener(FocusUnit);
     }
     void OnValidate()
     {
@@ -80,7 +147,7 @@ public class Game : MonoBehaviour
         }
     }
 
-    Ray TouchRay => Camera.main.ScreenPointToRay(Input.mousePosition);
+    // Ray TouchRay => Camera.main.ScreenPointToRay(Input.mousePosition);
     void Update()
     {
         // foreach (KeyCode kcode in System.Enum.GetValues(typeof(KeyCode)))
@@ -90,35 +157,39 @@ public class Game : MonoBehaviour
 
 
         // }
-        for (int i = 0; i < numberKeyCodes.Length; ++i)
+        DetectGrabUnit();
+        UpdatePickupUnit();
+        KeyCodePreUnitSpawn();
+        ToggerBoardGridShow();
+        PressHotkeyAllBattle();
+        PressHotkeySpawnGroupEqual();
+        RandomSpawnMode();
+        RoundUpdate();
+
+        if (InputUtils.Mouse1Press())
         {
-            if (Input.GetKeyDown(numberKeyCodes[i]))
+            HandleTouch();
+        }
+
+    }
+
+    private void RoundUpdate()
+    {
+        if (RoundManager.Round != null)
+        {
+            if (RoundManager.Round.ValidEndGame(true))
             {
-                SelectedSpawnUnit = i;
-                Debug.Log(SelectedSpawnUnit.ToString() + " Pick " + GetUnitByKeyCode().name);
-                break;
+                RoundManager.EndRound();
             }
         }
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            board.ShowGrid = !board.ShowGrid;
-        }
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            AllBattleMode();
-        }
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            RandomSpawn2GroupEqual();
-        }
-        if (Input.GetKeyDown(KeyCode.R))
+    }
+
+    private void RandomSpawnMode()
+    {
+        if (InputUtils.HotkeyRandomMode())
         {
             RandomMode = !RandomMode;
             Debug.Log(string.Format("Random Mode {0}", RandomMode));
-        }
-        if (Input.GetMouseButtonDown(0))
-        {
-            HandleTouch();
         }
         if (RandomMode)
         {
@@ -139,9 +210,132 @@ public class Game : MonoBehaviour
                 _spawnCount++;
             }
         }
+    }
+
+    private void PressHotkeySpawnGroupEqual()
+    {
+        if (InputUtils.HotkeySpawnGroupEqual())
+        {
+            RandomSpawn2GroupEqual();
+        }
+    }
+
+    private void PressHotkeyAllBattle()
+    {
+        if (InputUtils.HotkeyAllBattle())
+        {
+            AllBattleMode();
+        }
+    }
+
+    private void ToggerBoardGridShow()
+    {
+        if (InputUtils.HotkeyBoardGrid())
+        {
+            board.ShowGrid = !board.ShowGrid;
+        }
+    }
+
+    private void KeyCodePreUnitSpawn()
+    {
+        int keyPress = InputUtils.GetNumberKeyPress();
+        if (keyPress > -1)
+        {
+            SelectedSpawnUnit = keyPress;
+            Debug.Log(SelectedSpawnUnit.ToString() + " Pick " + GetUnitByKeyCode().name);
+        }
 
     }
 
+    private void DetectGrabUnit()
+    {
+        if (GrabUnit != null)
+        {
+            ActionUnit actionUnit = GrabUnit.GetComponent<ActionUnit>();
+            if (_isGrab)
+            {
+                GameTile tile = board.GetTile(InputUtils.GetTouchRayMouse());
+                if (tile != null)
+                {
+                    GrabUnit.transform.localPosition = new Vector3(tile.transform.localPosition.x,
+                    1,
+                    tile.transform.localPosition.z);
+                    Debug.Assert(actionUnit.TilePos != null, "Tile Pos should always not null");
+                    actionUnit.TilePos.ActionUnit = null;
+                    actionUnit.TilePos = tile;
+                    tile.ActionUnit = actionUnit;
+                }
+            }
+            if (InputUtils.Mouse1Free())
+            {
+                if (_isGrab)
+                {
+                    _isGrab = false;
+                    GrabUnit.transform.localPosition += Vector3.down;
+                    if (RoundMode)
+                    {
+                        if (!actionUnit.TilePos.PrepareTile)
+                        {
+                            UnitLevelManager.Instance.ValidLevelUpUnit(actionUnit);
+                        }
+                    }
+                }
+                GrabUnit = null;
+                _accumGrabTime = 0;
+            }
+            else if (!_isGrab)
+            {
+                _accumGrabTime += Time.deltaTime;
+                if (_accumGrabTime > 1f)
+                {
+                    Debug.Log("Grab" + _accumGrabTime);
+                    GrabUnit.transform.localPosition += Vector3.up;
+                    _isGrab = true;
+                }
+            }
+        }
+    }
+
+    private void UpdatePickupUnit()
+    {
+        if (PickupUnit != null &&
+            (InputUtils.LeftMousePress()
+            || (InputUtils.Mouse1Press() && !InputUtils.LeftShiftPress())
+            )
+        )
+        {
+            PickupUnit = null;
+            if (PickupModel != null)
+            {
+                Destroy(PickupModel);
+            }
+        }
+        if (PickupUnit != null)
+        {
+            ShowUnitPickup();
+        }
+    }
+
+    private void ShowUnitPickup()
+    {
+        if (PickupUnit == null) return;
+        GameTile tile = board.GetTile(InputUtils.GetTouchRayMouse());
+        if (tile == null) return;
+
+        if (PickupModel == null)
+        {
+            PickupModel = Instantiate(PickupUnit.characterPrefab);
+            for (int i = 0; i < TileUnitDatas.Count; i++)
+            {
+                if (TileUnitDatas[i].unitName.Equals(PickupUnit.unitName))
+                {
+                    SelectedSpawnUnit = i;
+                    break;
+                }
+            }
+        }
+        PickupModel.transform.localPosition = tile.transform.localPosition;
+    }
 
     public void AllBattleMode(bool IsBattle = true)
     {
@@ -223,11 +417,12 @@ public class Game : MonoBehaviour
         for (int i = 0; i < MAX_RANDOM_SPAWN; i++)
         {
             group = i % 2 == 0 ? 0 : 1;
+            if (RoundMode && group == 1) continue; // mirror mode chỉ spawn group 0
 
             spawnTile = board.GetEmptyTileGroup(group);
             if (spawnTile != null)
             {
-                RandomSpawnMonster(spawnTile, group).transform.localRotation = Quaternion.Euler(0, group == 1 ? 180f : 0, 0);
+                RandomSpawnMonster(spawnTile, group);
             }
         }
         MainMenuControl.Instance.ScanAndShow(true);
@@ -251,14 +446,76 @@ public class Game : MonoBehaviour
 
     private ActionUnit RandomSpawnMonster(GameTile tile, int group)
     {
+        if (RoundMode) group = 0;
+        return SpawnMonster(tile, group, GetUnitByKeyCode());
+        // ActionUnit monster = actionUnitFactory.Get();
+        // monster.tileUnitData = GetUnitByKeyCode();
+        // monster.SpawnOn(tile);
+        // monster.UnitID = ++ActionUnit.TotalUnit;
+        // monster.Group = group;
+        // monster.SpawnCharacter();
+        // ActionUnitManger.Add(monster);
+        // return monster;
+    }
+
+    internal void SpawnPrepareUnit(TileUnitData tileUnitData)
+    {
+        GameTile validTile = board.GetPrepareTile();
+        if (validTile != null)
+        {
+            SpawnMonster(validTile, 0, tileUnitData);
+        }
+    }
+
+    private ActionUnit SpawnMonster(GameTile tile, int group, TileUnitData typeUnit, TileUnitData curData = null)
+    {
         ActionUnit monster = actionUnitFactory.Get();
-        monster.tileUnitData = GetUnitByKeyCode();
+        monster.tileUnitData = typeUnit;
+        if (curData != null)
+        {
+            ActionUnitData data = (ActionUnitData)ScriptableObject.CreateInstance(typeof(ActionUnitData));
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(curData), data);
+            monster.CurrentStatus = data;
+        }
         monster.SpawnOn(tile);
         monster.UnitID = ++ActionUnit.TotalUnit;
         monster.Group = group;
         monster.SpawnCharacter();
+        monster.transform.localRotation = Quaternion.Euler(0, group == 1 ? 180f : 0, 0);
         ActionUnitManger.Add(monster);
         return monster;
+    }
+
+    public void MirrorSpawn()
+    {
+        GameTile spawnTile = null;
+        int group = 1;
+        List<ActionUnit> units = ActionUnitManger.Instance.GetAll().Where(x => !x.TilePos.PrepareTile).ToList();
+        foreach (ActionUnit unit in units)
+        {
+            spawnTile = board.GetRandomEmptyTileGroup(group);
+            if (spawnTile != null)
+            {
+                SpawnMonster(spawnTile, group, unit.tileUnitData, unit.CurrentStatus);
+            }
+        }
+        MainMenuControl.Instance.ScanAndShow(true);
+    }
+
+    public void StartGame()
+    {
+        // if (RoundMode)
+        //     MirrorSpawn();
+        OnGame = true;
+        RoundManager.StartNewRound(0, ActionUnitManger.Instance.GetAll().Where(x => !x.TilePos.PrepareTile).ToList());
+        // AllBattleMode();
+    }
+
+    public void EndGame()
+    {
+        AllBattleMode(false);
+        ClearBoard();
+        OnGame = false;
     }
 
     private TileUnitData GetUnitByKeyCode()
@@ -276,9 +533,9 @@ public class Game : MonoBehaviour
 
     void HandleTouch2()
     {
-        GameTile tile = board.GetTile(TouchRay);
+        GameTile tile = board.GetTile(InputUtils.GetTouchRayMouse());
         if (tile == null) return;
-        Monster remove = monsterManager.GetMonster(TouchRay);
+        Monster remove = monsterManager.GetMonster(InputUtils.GetTouchRayMouse());
         if (remove != null)
         {
             monsterManager.Remove(remove);
@@ -286,15 +543,15 @@ public class Game : MonoBehaviour
         }
         else
         {
-            RandomSpawnMonster(tile, Input.GetKey(KeyCode.LeftShift) ? 1 : 0);
+            RandomSpawnMonster(tile, InputUtils.LeftShiftPress() ? 1 : 0);
         }
     }
 
     void HandleTouch()
     {
-        GameTile tile = board.GetTile(TouchRay);
+        GameTile tile = board.GetTile(InputUtils.GetTouchRayMouse());
         if (tile == null) return;
-        if (Input.GetKey(KeyCode.LeftControl))
+        if (InputUtils.LeftControlPress())
         {
             Vector3 faceTarget = tile.transform.position;
             // faceTarget.y = tile.transform.position.z;
@@ -305,29 +562,28 @@ public class Game : MonoBehaviour
             }
             return;
         }
-        ActionUnit remove = ActionUnitManger.GetUnit(TouchRay);
-        if (remove != null)
+        ActionUnit focus = ActionUnitManger.GetUnit(InputUtils.GetTouchRayMouse());
+        if (focus != null)
         {
-            ActionUnitManger.Remove(remove);
-            actionUnitFactory.Reclaim(remove);
+            // RemoveUnit(focus);
+            OnUnitSelected.Invoke((ActionUnit)focus);
         }
         else
         {
-            RandomSpawnMonster(tile, Input.GetKey(KeyCode.LeftShift) ? 1 : 0);
+            RandomSpawnMonster(tile, InputUtils.LeftShiftPress() ? 1 : 0);
         }
-        //GameTile tile = Board.GetTile(TouchRay);
-        //if (tile != null)
-        //{
-        //    if (tile.Monster != null)
-        //    {
-        //        monsterManager.Remove(tile.Monster);
-        //        monsterFactory.Reclaim(tile.Monster);
-        //    }
-        //    else
-        //    {
-        //        RandomSpawnMonster(tile, Input.GetKey(KeyCode.LeftShift) ? 1 : 0);
-        //    }
-        //}
+    }
+
+    private void RemoveUnit(ActionUnit remove)
+    {
+        ActionUnitManger.Remove(remove);
+        actionUnitFactory.Reclaim(remove);
+    }
+
+    public void FocusUnit(ActionUnit focus)
+    {
+        InGameMenuControl.Instance.FocusUnit = focus;
+        GrabUnit = focus.gameObject;
     }
 
 

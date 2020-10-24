@@ -12,6 +12,7 @@ public class ActionUnitFindTarget : MonoBehaviour
     public bool CheckPathEnable = false;
 
     public bool LockTarget = false;
+    public bool LockToDeath = false;
     List<int> _unreachable = new List<int>();
 
     // Start is called before the first frame update
@@ -28,12 +29,20 @@ public class ActionUnitFindTarget : MonoBehaviour
     {
         if (IsNeedFindTarget())
         {
+            Debug.Assert(!LockToDeath,"Lock to death true, still find target");
             AcquireTarget();
+        }else{
+
         }
     }
 
     private bool IsNeedFindTarget()
     {
+        if (LockToDeath && Host.TargetAttack != null && Host.TargetAttack.Alive) return false;
+        else if (LockToDeath)
+        {
+            LockToDeath = false;
+        }
         if (!Host.BattleMode || Host.State.Equals(ActionUnit.UnitState.Attack)) return false;
         /*
         if (Host.TargetAttack != null)
@@ -45,11 +54,12 @@ public class ActionUnitFindTarget : MonoBehaviour
         return true;
     }
 
+
     bool AcquireTarget()
     {
         ActionUnit closest = null;
         IOrderedEnumerable<ActionUnit> potentialTarget = ActionUnitManger.Instance.GetAll()
-                        .Where(x => x.UnitID != Host.UnitID && x.Group != Host.Group && x.Alive)
+                        .Where(x => x.UnitID != Host.UnitID && x.Group != Host.Group && x.Alive && x.BattleMode)
                         .OrderBy(x => (Host.transform.position - x.transform.position).magnitude);
         NavMeshAgent nma = Host.GetComponent<NavMeshAgent>();
         NavMeshObstacle nmo = Host.GetComponent<NavMeshObstacle>();
@@ -120,7 +130,7 @@ public class ActionUnitFindTarget : MonoBehaviour
         return Game.Instance.boardSize.magnitude;
     }
 
-    private void MarkTargetAttack(ActionUnit monster)
+    public void MarkTargetAttack(ActionUnit monster)
     {
         if (Host.TargetAttack == monster) return;
         if (Host.TargetAttack != null)

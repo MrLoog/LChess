@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b40e079b7cd7e6f4383d5f13671539c9, type: 3}
+  m_Name: RoundPlanMirror
+  m_EditorClassIdentifier: 
+  MaxRepeat: 0
+  PlanType: 0
+  ContentType: 1
+  Rounds: []
+  RoundPlans:
+  - {fileID: 11400000, guid: cd4836e4f06bc794bb403de259815d5d, type: 2}
+  - {fileID: 11400000, guid: ed73fe2606bd0df47b10530de18152eb, type: 2}

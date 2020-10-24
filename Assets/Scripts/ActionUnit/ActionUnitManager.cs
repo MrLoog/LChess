@@ -24,7 +24,7 @@ public class ActionUnitManger
 
     internal List<ActionUnit> GetAll()
     {
-        return actionUnits;
+        return actionUnits.Where(a => a.gameObject.activeInHierarchy).ToList();
     }
 
     internal void Remove(ActionUnit actionUnit)

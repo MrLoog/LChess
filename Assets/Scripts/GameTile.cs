@@ -14,6 +14,7 @@ public class GameTile : MonoBehaviour
 
     public Monster Monster;
     public ActionUnit ActionUnit;
+    public bool PrepareTile;
 
     public GameTile NTile, NETile, ETile, ESTile, STile, SWTile, WTile, WNTile;
 

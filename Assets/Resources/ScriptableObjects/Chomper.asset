@@ -15,7 +15,12 @@ MonoBehaviour:
   unitName: Chomper
   characterPrefab: {fileID: 4503617987746806118, guid: 4adf98ba650c11f49934210a5dab0350,
     type: 3}
-  baseHealth: 800
+  baseHealth: 600
   baseAttack: 80
   baseAttackRange: 2
   baseAttackRate: 1
+  gold: 100
+  description: 
+  Level: 1
+  NextLevel: {fileID: 11400000, guid: 9150cdd7b5d3c834eb6c3d836d51eec3, type: 2}
+  PrevLevel: {fileID: 0}

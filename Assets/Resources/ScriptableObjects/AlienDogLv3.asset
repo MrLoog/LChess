@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbbff47cdf468a844a31bcfcd0f6481c, type: 3}
+  m_Name: AlienDogLv3
+  m_EditorClassIdentifier: 
+  unitName: Alien Dog
+  characterPrefab: {fileID: 1487260194191106087, guid: 85a4b973960dac04f86575b26038e2e7,
+    type: 3}
+  baseHealth: 12000
+  baseAttack: 1800
+  baseAttackRange: 2
+  baseAttackRate: 1
+  gold: 200
+  description: 
+  Level: 3
+  NextLevel: {fileID: 0}
+  PrevLevel: {fileID: 11400000, guid: d0db15219cd2c584ca42d329194f1a08, type: 2}

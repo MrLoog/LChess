@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbbff47cdf468a844a31bcfcd0f6481c, type: 3}
+  m_Name: GrenadierLv2
+  m_EditorClassIdentifier: 
+  unitName: Grenadier
+  characterPrefab: {fileID: 8594977971742873870, guid: f65a54a4e757c2a49abefee79a264648,
+    type: 3}
+  baseHealth: 5000
+  baseAttack: 1000
+  baseAttackRange: 2
+  baseAttackRate: 1.5
+  gold: 150
+  description: 
+  Level: 2
+  NextLevel: {fileID: 11400000, guid: e61c033b3703bc64b924017f0e270b91, type: 2}
+  PrevLevel: {fileID: 11400000, guid: eaa80fb720ae82c4dbee61071844834b, type: 2}

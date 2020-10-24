@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbbff47cdf468a844a31bcfcd0f6481c, type: 3}
+  m_Name: SpitterLv2
+  m_EditorClassIdentifier: 
+  unitName: Spitter
+  characterPrefab: {fileID: 2679776825152123275, guid: afd618d8e056727439c37cba7abd9637,
+    type: 3}
+  baseHealth: 1800
+  baseAttack: 200
+  baseAttackRange: 2
+  baseAttackRate: 0.5
+  gold: 100
+  description: 
+  Level: 2
+  NextLevel: {fileID: 11400000, guid: b98046aa2ce7e2f43aeb0459f752f8d0, type: 2}
+  PrevLevel: {fileID: 11400000, guid: 100922a8b612c774188e375cc9076c97, type: 2}
