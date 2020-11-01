@@ -1,9 +1,10 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
+using UnityEngine;
 
-namespace RPGCharacterAnims{
+namespace RPGCharacterAnims
+{
 
-	public enum RPGCharacterStateFREE{
+    public enum RPGCharacterStateFREE{
 		Idle = 0,
 		Move = 1,
 		Jump = 2,

@@ -15,6 +15,7 @@ MonoBehaviour:
   unitName: Black Dragon
   characterPrefab: {fileID: 7618279370295971174, guid: 10711bd59de9a5e4a99ab061da10af01,
     type: 3}
+  Types: 02000000030000000600000008000000
   baseHealth: 5000
   baseAttack: 1000
   baseAttackRange: 3

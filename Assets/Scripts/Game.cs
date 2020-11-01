@@ -1,9 +1,6 @@
-﻿using Assets.Scripts;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class Game : MonoBehaviour
 {
@@ -99,6 +96,7 @@ public class Game : MonoBehaviour
 
     public RoundPlan Plan;
 
+
     public int SelectedSpawnUnit = -1;
     void OnEnable()
     {
@@ -118,10 +116,16 @@ public class Game : MonoBehaviour
         board.ShowGrid = true;
 
         Resources.LoadAll<TileUnitData>("ScriptableObjects");
+        Resources.LoadAll<Formation>("Formation");
         TileUnitDatas = Resources.FindObjectsOfTypeAll<ActionUnitData>().Where(x => x.Level == 1).Cast<TileUnitData>().ToList();
         if (TileUnitDatas.Count == 0)
             Debug.Log("Could not find any tile unit data scriptable objects");
-
+        List<Formation> lst = Resources.FindObjectsOfTypeAll<Formation>().Where(x => x.PrevLevel == null).ToList();
+        foreach (Formation f in lst)
+        {
+            FormationManager.Instance.Formations.Add(FormationFacade.CreateFromFormation(f));
+        }
+        // FormationManager.Instance.Formations = Resources.FindObjectsOfTypeAll<Formation>().Where(x => x.PrevLevel == null).Select(x => FormationFacade.CreateFromFormation(x)).ToList();
 
         RegisterEvent();
     }
@@ -251,34 +255,85 @@ public class Game : MonoBehaviour
     {
         if (GrabUnit != null)
         {
-            ActionUnit actionUnit = GrabUnit.GetComponent<ActionUnit>();
+            ActionUnit grab = GrabUnit.GetComponent<ActionUnit>();
+            GameTile tile = board.GetTile(InputUtils.GetTouchRayMouse());
             if (_isGrab)
             {
-                GameTile tile = board.GetTile(InputUtils.GetTouchRayMouse());
                 if (tile != null)
                 {
-                    GrabUnit.transform.localPosition = new Vector3(tile.transform.localPosition.x,
-                    1,
-                    tile.transform.localPosition.z);
-                    Debug.Assert(actionUnit.TilePos != null, "Tile Pos should always not null");
-                    actionUnit.TilePos.ActionUnit = null;
-                    actionUnit.TilePos = tile;
-                    tile.ActionUnit = actionUnit;
+                    // GrabUnit.transform.localPosition = new Vector3(tile.transform.localPosition.x,
+                    // 1,
+                    // tile.transform.localPosition.z);
+
+                    if (Physics.Raycast(InputUtils.GetTouchRayMouse(), out RaycastHit hit))
+                    {
+                        GrabUnit.transform.localPosition = new Vector3(hit.point.x,
+                        1,
+                        hit.point.z);
+                    }
+
+
                 }
             }
             if (InputUtils.Mouse1Free())
             {
                 if (_isGrab)
                 {
+                    bool newPos = true;
                     _isGrab = false;
+                    grab.EnterGrabMode(false);
+                    GrabUnit.transform.localPosition = new Vector3(tile.transform.localPosition.x,
+                    1,
+                    tile.transform.localPosition.z);
                     GrabUnit.transform.localPosition += Vector3.down;
-                    if (RoundMode)
+                    if (tile.ActionUnit != null)
                     {
-                        if (!actionUnit.TilePos.PrepareTile)
+                        if (tile.ActionUnit.UnitID != grab.UnitID)
                         {
-                            UnitLevelManager.Instance.ValidLevelUpUnit(actionUnit);
+                            newPos = false;
+                            MainMenuControl.Instance.ShowUserMessage(UserMessageManager.MES_OTHER_UNIT, 1f);
+                        }
+                        else
+                        {
+                            //no change 
                         }
                     }
+                    else
+                    {
+                        if (RoundMode && !tile.PrepareTile)
+                        {
+                            int unitOnBoard = ActionUnitManger.Instance.GetAll().Where(x => x.enabled && x.Group == 0 && !x.TilePos.PrepareTile && x.UnitID != grab.UnitID).Count();
+                            if (unitOnBoard + 1 > RoundManager.Instance.Round.GetMaxSpawn())
+                            {
+                                newPos = false;
+                                MainMenuControl.Instance.ShowUserMessage(UserMessageManager.MES_LIMIT_UNIT, 1f);
+                            }
+                        }
+
+                    }
+                    if (newPos)
+                    {
+                        //change reference
+                        grab.TilePos.ActionUnit = null;
+                        grab.TilePos = tile;
+                        tile.ActionUnit = grab;
+                        if (RoundMode)
+                        {
+                            if (!grab.TilePos.PrepareTile)
+                            {
+                                UnitLevelManager.Instance.ValidLevelUpUnit(grab);
+                            }
+                        }
+                        FormationManager.Instance.ApplyFormation();
+                    }
+                    else
+                    {
+                        //exists unit so return grab to origin position
+                        GrabUnit.transform.localPosition = new Vector3(grab.TilePos.transform.localPosition.x,
+                        GrabUnit.transform.localPosition.y,
+                        grab.TilePos.transform.localPosition.z);
+                    }
+
                 }
                 GrabUnit = null;
                 _accumGrabTime = 0;
@@ -286,9 +341,10 @@ public class Game : MonoBehaviour
             else if (!_isGrab)
             {
                 _accumGrabTime += Time.deltaTime;
-                if (_accumGrabTime > 1f)
+                if (_accumGrabTime > 0.1f)
                 {
                     Debug.Log("Grab" + _accumGrabTime);
+                    grab.EnterGrabMode(true);
                     GrabUnit.transform.localPosition += Vector3.up;
                     _isGrab = true;
                 }
@@ -467,22 +523,20 @@ public class Game : MonoBehaviour
         }
     }
 
-    private ActionUnit SpawnMonster(GameTile tile, int group, TileUnitData typeUnit, TileUnitData curData = null)
+    private ActionUnit SpawnMonster(GameTile tile, int group, TileUnitData typeUnit)
     {
         ActionUnit monster = actionUnitFactory.Get();
         monster.tileUnitData = typeUnit;
-        if (curData != null)
-        {
-            ActionUnitData data = (ActionUnitData)ScriptableObject.CreateInstance(typeof(ActionUnitData));
-            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(curData), data);
-            monster.CurrentStatus = data;
-        }
         monster.SpawnOn(tile);
         monster.UnitID = ++ActionUnit.TotalUnit;
         monster.Group = group;
         monster.SpawnCharacter();
         monster.transform.localRotation = Quaternion.Euler(0, group == 1 ? 180f : 0, 0);
         ActionUnitManger.Add(monster);
+        if (!tile.PrepareTile)
+        {
+            FormationManager.Instance.ApplyFormation();
+        }
         return monster;
     }
 
@@ -491,15 +545,55 @@ public class Game : MonoBehaviour
         GameTile spawnTile = null;
         int group = 1;
         List<ActionUnit> units = ActionUnitManger.Instance.GetAll().Where(x => !x.TilePos.PrepareTile).ToList();
+        int maxLevel = -1;
+        int existsMaxLevel = 1;
+        if (RoundMode)
+        {
+            maxLevel = 1 + (RoundManager.Instance.Round.RoundNumber <= 10 ? 0 : +Mathf.CeilToInt((RoundManager.Instance.Round.RoundNumber - 10f) / 5f));
+        }
+        TileUnitData dataSpawn = null;
+        int spawnCount = RoundMode ? RoundManager.Instance.Round.GetMaxSpawn() : -1;
         foreach (ActionUnit unit in units)
         {
             spawnTile = board.GetRandomEmptyTileGroup(group);
             if (spawnTile != null)
             {
-                SpawnMonster(spawnTile, group, unit.tileUnitData, unit.CurrentStatus);
+                dataSpawn = unit.tileUnitData;
+                int level = ((ActionUnitData)unit.tileUnitData).Level;
+                if (maxLevel != -1 &&
+                level > maxLevel)
+                {
+                    existsMaxLevel = units.Select(x => x.tileUnitData).Where(x => ((ActionUnitData)x).Level <= maxLevel).OrderByDescending(x => ((ActionUnitData)x).Level).Select(x => ((ActionUnitData)x).Level).FirstOrDefault();
+                    dataSpawn = RandomFromList(units.Select(x => x.tileUnitData).Cast<ActionUnitData>().ToList(), existsMaxLevel);
+
+                }
+                SpawnMonster(spawnTile, group, dataSpawn);
+                spawnCount--;
+            }
+        }
+        if (spawnCount > 0)
+        {
+            for (int i = spawnCount; i > 0; i--)
+            {
+                spawnTile = board.GetRandomEmptyTileGroup(group);
+                if (spawnTile != null)
+                {
+                    dataSpawn = RandomFromList(units.Select(x => x.tileUnitData).Cast<ActionUnitData>().ToList());
+                    SpawnMonster(spawnTile, group, dataSpawn);
+                }
             }
         }
         MainMenuControl.Instance.ScanAndShow(true);
+    }
+
+    private TileUnitData RandomFromList(List<ActionUnitData> source, int levelLimit = 0)
+    {
+        List<ActionUnitData> avaiable = source.Where(x => levelLimit == -1 || ((ActionUnitData)x).Level == levelLimit).ToList();
+        if (avaiable.Count == 0)
+        {
+            avaiable = TileUnitDatas.Where(x => levelLimit == 0 || ((ActionUnitData)x).Level == levelLimit).Cast<ActionUnitData>().ToList();
+        }
+        return avaiable.PickRandom();
     }
 
     public void StartGame()
@@ -568,7 +662,7 @@ public class Game : MonoBehaviour
             // RemoveUnit(focus);
             OnUnitSelected.Invoke((ActionUnit)focus);
         }
-        else
+        else if (!RoundMode)
         {
             RandomSpawnMonster(tile, InputUtils.LeftShiftPress() ? 1 : 0);
         }

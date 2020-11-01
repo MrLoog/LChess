@@ -15,6 +15,7 @@ MonoBehaviour:
   unitName: Alien Dog
   characterPrefab: {fileID: 1487260194191106087, guid: 85a4b973960dac04f86575b26038e2e7,
     type: 3}
+  Types: 000000000400000005000000
   baseHealth: 12000
   baseAttack: 1800
   baseAttackRange: 2

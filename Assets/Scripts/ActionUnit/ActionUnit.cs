@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -24,6 +22,8 @@ public class ActionUnit : MonoBehaviour
     public TileUnitData tileUnitData { get; internal set; }
 
     public ActionUnitData OriginStatus = default;
+
+    [SerializeField]
     private ActionUnitData _currentStatus;
     public ActionUnitData CurrentStatus
     {
@@ -33,8 +33,6 @@ public class ActionUnit : MonoBehaviour
         }
         set
         {
-            OriginStatus = (ActionUnitData)ScriptableObject.CreateInstance(typeof(ActionUnitData));
-            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(value), OriginStatus);
             _currentStatus = value;
         }
     }
@@ -62,11 +60,126 @@ public class ActionUnit : MonoBehaviour
     public bool Alive => CurrentStatus.baseHealth > 0;
 
     public bool IsRealDestroy { get; set; } = true;
-    public GameTile TilePos { get; set; }
+
+    public GameTile TilePos;
 
     public ActionUnit MirrorEnemy;
 
     private float TimeOfLastAttack;
+
+    public List<BuffFacade> _buffs;
+    public List<BuffFacade> Buffs
+    {
+        get
+        {
+            if (_buffs == null) _buffs = new List<BuffFacade>();
+            return _buffs;
+        }
+        private set
+        {
+            _buffs = value;
+        }
+    }
+    public List<bool> _buffed;
+    public List<bool> Buffed
+    {
+        get
+        {
+            if (_buffed == null) _buffed = new List<bool>();
+            return _buffed;
+        }
+        private set
+        {
+            _buffed = value;
+        }
+    }
+
+    public bool AddBuff(BuffFacade b, bool IsApply = true)
+    {
+        Buffs.Add(b);
+        Buffed.Add(false);
+        if (IsApply)
+        {
+            return CalculateBuff(Buffed.Count - 1);
+        }
+        return true;
+    }
+
+    public bool RemoveBuff(BuffFacade b, bool IsApply = true)
+    {
+        int index = Buffs.IndexOf(b);
+        Debug.Log("Buff unit remove");
+        if (index == -1) return false;
+        else
+        {
+            if (IsApply)
+            {
+                Debuff(index);
+            }
+            Buffs.RemoveAt(index);
+            Buffed.RemoveAt(index);
+        }
+        Debug.Log("Buff unit remove " + index);
+        return true;
+    }
+
+    public bool Debuff(int index = -1)
+    {
+        if (index == -1)
+        {
+            for (int i = 0; i < Buffed.Count; i++)
+            {
+                Debuff(i);
+            }
+        }
+        else
+        {
+            if (Buffed.Count < (index + 1))
+            {
+                return false;
+            }
+            else
+            {
+                if (Buffed[index])
+                {
+                    if (Buffs[index].RemoveBuff(this))
+                    {
+                        Buffed[index] = false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public bool CalculateBuff(int index = -1)
+    {
+        if (index == -1)
+        {
+            for (int i = 0; i < Buffed.Count; i++)
+            {
+                CalculateBuff(i);
+            }
+        }
+        else
+        {
+            if (Buffed.Count < (index + 1))
+            {
+                return false;
+            }
+            else
+            {
+                if (!Buffed[index])
+                {
+                    if (Buffs[index].ApplyBuff(this))
+                    {
+                        Buffed[index] = true;
+                    }
+                }
+            }
+        }
+        return true;
+    }
 
     private void Awake()
     {
@@ -120,15 +233,20 @@ public class ActionUnit : MonoBehaviour
             characterPrefabParent.transform.ChangeLayersRecursively(gameObject.layer);
 
             _animator = GetComponentInChildren<Animator>();
-            if (CurrentStatus == null)
-            {
-                ActionUnitData newData = new ActionUnitData();
-                JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(tileUnitData), newData);
-                CurrentStatus = newData;
-            }
+            CalculateStatusStat();
             _characterAnimationEventCalls = GetComponentInChildren<CharacterAnimationEventCalls>();
             _characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_ATTACK).AddListener(AttackApplyDamage);
         }
+    }
+
+    public void CalculateStatusStat()
+    {
+        ActionUnitData newData = (ActionUnitData)ScriptableObject.CreateInstance(typeof(ActionUnitData));
+        JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(((ActionUnitData)tileUnitData).GetActualStatus()), newData);
+        OriginStatus = newData;
+        newData = (ActionUnitData)ScriptableObject.CreateInstance(typeof(ActionUnitData));
+        JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(((ActionUnitData)tileUnitData).GetActualStatus()), newData);
+        CurrentStatus = newData;
     }
 
     private void AttackApplyDamage()
@@ -144,7 +262,6 @@ public class ActionUnit : MonoBehaviour
     {
         if (CurrentStatus.baseHealth <= 0) return;
         CurrentStatus.baseHealth -= receivedDamage;
-        Debug.Log(string.Format("Received {0} damage, remain {1} heath", receivedDamage, CurrentStatus.baseHealth));
         if (CurrentStatus.baseHealth <= 0)
         {
             _currentState.Disable();
@@ -191,7 +308,13 @@ public class ActionUnit : MonoBehaviour
     public bool IsEnemyInRangeAttack()
     {
         if (TargetAttack == null) return false;
-        return Vector3.Distance(transform.position, TargetAttack.transform.position) <= ((ActionUnitData)tileUnitData).baseAttackRange;
+        return Vector3.Distance(transform.position, TargetAttack.transform.position) <= ((ActionUnitData)CurrentStatus).baseAttackRange;
+    }
+
+    internal void EnterGrabMode(bool v)
+    {
+        GetComponent<NavMeshObstacle>().enabled = false;
+        GetComponent<NavMeshAgent>().enabled = !v;
     }
 
     public bool ChangeState(UnitState newState)
@@ -264,10 +387,6 @@ public class ActionUnit : MonoBehaviour
         FaceTarget(TargetAttack.transform.position);
     }
 
-    public bool AddBuff(Buff buff)
-    {
-        return true;
-    }
 
     public void FaceTarget(Vector3 destination)
     {
@@ -332,7 +451,7 @@ public class ActionUnit : MonoBehaviour
                 _host.ChangeState(ActionUnit.UnitState.Idle);
                 return;
             }
-            else if (Time.time - _host.TimeOfLastAttack > ((ActionUnitData)_host.tileUnitData).baseAttackRate)
+            else if (Time.time - _host.TimeOfLastAttack > ((ActionUnitData)_host.CurrentStatus).baseAttackRate)
             {
                 Debug.DrawLine(_host.transform.position, _host.TargetAttack.transform.position, Color.red, 0.5f);
                 _host.AnimateAttack();

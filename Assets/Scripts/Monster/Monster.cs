@@ -1,9 +1,6 @@
 ﻿using Assets.Scripts;
 using Assets.Scripts.Component;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class Monster : MonoBehaviour, ReceivedDmgAble
 {

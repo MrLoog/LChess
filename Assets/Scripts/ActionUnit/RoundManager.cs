@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -8,7 +6,7 @@ public class RoundManager
 {
 
     public RoundPlan Plan;
-    private static RoundManager _instance;
+    private static RoundManager _instance = new RoundManager();
     public static RoundManager Instance
     {
         get
@@ -32,16 +30,36 @@ public class RoundManager
 
     private RoundManager()
     {
+
+    }
+
+    private void Init()
+    {
         Rounds = new List<Round>();
-        GoldAccount = new GoldAccount(190f);
+        GoldAccount = new GoldAccount(1000f);
         Plan = Game.Instance.Plan;
+        MainGroup = 0;
+        PrepareRound(MainGroup, null);
     }
 
     public bool StartNewRound(int mainGroup, List<ActionUnit> battleUnits)
     {
+        if (Rounds == null)
+        {
+            Init();
+        }
+        Round.StartRound(mainGroup);
+        MainMenuControl.Instance.RoundTime = Round.RoundTime;
+        MainMenuControl.Instance.Round = Rounds.Count();
+        Debug.Log("TotalRound " + Rounds.Count());
+        return true;
+    }
+
+    public bool PrepareRound(int mainGroup, List<ActionUnit> battleUnits)
+    {
         if (Plan != null)
         {
-            Round = Plan.GetNextRound(mainGroup,Rounds.Count);
+            Round = Plan.GetNextRound(mainGroup, Rounds.Count);
         }
         else
         {
@@ -50,22 +68,20 @@ public class RoundManager
         MainGroup = mainGroup;
         Rounds.Add(Round);
         Round.RoundNumber = Rounds.Count();
-        Round.StartRound(mainGroup);
-        MainMenuControl.Instance.RoundTime = Round.RoundTime;
-        MainMenuControl.Instance.Round = Rounds.Count;
+        Debug.Log("TotalRound1 " + Rounds.Count());
         return true;
     }
 
-    
 
     internal void EndRound()
     {
         Debug.Log("Round RoundManager End");
         Debug.Assert(Round.CurPhase == Round.RoundPhase.End, "Round must be end phase");
         CalculateBonus();
-        Round = null;
-        
+        // Round = null;
+
         Game.Instance.OnGame = false;
+        PrepareRound(MainGroup, null);
     }
 
     private void CalculateBonus()
@@ -95,6 +111,7 @@ public class RoundManager
 
     internal void Reset()
     {
-        Rounds.Clear();
+        Rounds?.Clear();
+        Init();
     }
 }

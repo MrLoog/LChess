@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-namespace RPGCharacterAnims{
+namespace RPGCharacterAnims
+{
 
-	public class GUIControlsFREE : MonoBehaviour{
+    public class GUIControlsFREE : MonoBehaviour{
 		RPGCharacterControllerFREE rpgCharacterController;
 		RPGCharacterMovementControllerFREE rpgCharacterMovementController;
 		public bool useNavAgent;

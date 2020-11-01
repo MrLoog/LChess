@@ -12,11 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e49aa735ca681f46991dcbf6fbb0966, type: 3}
   m_Name: RoundBuff
   m_EditorClassIdentifier: 
+  ExpressionNumberBuff: 1
+  RoundNumber: 0
+  Buffs: []
   StartData: []
   EndData: []
   EnemySource: 0
   UserGroup: 0
   CurPhase: 0
   Result: 0
-  RoundTime: 0
-  TimeLeft: 0
+  RoundTime: 30
+  TimeLeft: 30
+  MainUnits: []
+  BattleUnits: []

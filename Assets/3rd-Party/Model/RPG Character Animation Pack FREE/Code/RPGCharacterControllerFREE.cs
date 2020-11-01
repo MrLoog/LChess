@@ -1,9 +1,10 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
+using UnityEngine;
 
-namespace RPGCharacterAnims{
+namespace RPGCharacterAnims
+{
 
-	[RequireComponent(typeof(RPGCharacterMovementControllerFREE))]
+    [RequireComponent(typeof(RPGCharacterMovementControllerFREE))]
 	[RequireComponent(typeof(RPGCharacterWeaponControllerFREE))]
 	[RequireComponent(typeof(RPGCharacterInputControllerFREE))]
 	public class RPGCharacterControllerFREE : MonoBehaviour{

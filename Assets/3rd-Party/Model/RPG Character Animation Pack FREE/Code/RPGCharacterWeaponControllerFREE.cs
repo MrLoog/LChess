@@ -1,9 +1,10 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
+using UnityEngine;
 
-namespace RPGCharacterAnims{
-	
-	public enum Weapon{
+namespace RPGCharacterAnims
+{
+
+    public enum Weapon{
 		UNARMED = 0,
 		TWOHANDSWORD = 1,
 		TWOHANDSPEAR = 2,

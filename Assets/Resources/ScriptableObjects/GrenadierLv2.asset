@@ -15,6 +15,7 @@ MonoBehaviour:
   unitName: Grenadier
   characterPrefab: {fileID: 8594977971742873870, guid: f65a54a4e757c2a49abefee79a264648,
     type: 3}
+  Types: 090000000800000005000000
   baseHealth: 5000
   baseAttack: 1000
   baseAttackRange: 2

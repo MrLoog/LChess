@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class InGameMenuControl : MonoBehaviour
@@ -22,7 +19,9 @@ public class InGameMenuControl : MonoBehaviour
     }
 
     private const string TEMPLATE_DISPLAY_DATA = "<b>{0}</b> : <color=lime>{1}</color>";
+    private const string TEMPLATE_DISPLAY_BUFF = "{0} {1} {2}";
     public GameObject CanvasMenu;
+    public GameObject PanelInfoDetails;
     [SerializeField]
     private ActionUnit _focusUnit;
     public ActionUnit FocusUnit
@@ -46,11 +45,7 @@ public class InGameMenuControl : MonoBehaviour
         }
     }
 
-    public Text UnitName;
-    public Text Health;
-    public Text Damage;
-    public Text AttackRange;
-    public Text AttackRate;
+    public Text TextInfo;
 
     public Texture2D TextureSword;
 
@@ -106,18 +101,43 @@ public class InGameMenuControl : MonoBehaviour
     {
         if (CanControlUnit)
         {
-            ActionUnitData originData = (ActionUnitData)FocusUnit.tileUnitData;
+            ActionUnitData originData = (ActionUnitData)FocusUnit.OriginStatus;
             ActionUnitData curData = (ActionUnitData)FocusUnit.CurrentStatus;
-            UnitName.text = string.Format(TEMPLATE_DISPLAY_DATA, "Name",
-                originData.unitName);
-            Health.text = string.Format(TEMPLATE_DISPLAY_DATA, "Health",
-                string.Format("{0}/{1}", curData.baseHealth, originData.baseHealth));
-            Damage.text = string.Format(TEMPLATE_DISPLAY_DATA, "Damage",
-                string.Format("{0}/{1}", curData.baseAttack, originData.baseAttack));
-            AttackRange.text = string.Format(TEMPLATE_DISPLAY_DATA, "Range",
-                string.Format("{0}/{1}", curData.baseAttackRange, originData.baseAttackRange));
-            AttackRate.text = string.Format(TEMPLATE_DISPLAY_DATA, "Rate",
+            string infoText = "";
+            infoText = string.Format(TEMPLATE_DISPLAY_DATA, "Name",
+                originData.unitName)
+                + "\r\n"
+                + string.Format(TEMPLATE_DISPLAY_DATA, "Health",
+                string.Format("{0}/{1}", curData.baseHealth, originData.baseHealth))
+                + "\r\n"
+                + string.Format(TEMPLATE_DISPLAY_DATA, "Damage",
+                string.Format("{0}/{1}", curData.baseAttack, originData.baseAttack))
+                + "\r\n"
+                + string.Format(TEMPLATE_DISPLAY_DATA, "Range",
+                string.Format("{0}/{1}", curData.baseAttackRange, originData.baseAttackRange))
+                + "\r\n"
+                + string.Format(TEMPLATE_DISPLAY_DATA, "Rate",
                 string.Format("{0}/{1}", curData.baseAttackRate, originData.baseAttackRate));
+
+            for (int i = 0; i < FocusUnit.Buffed.Count; i++)
+            {
+                if (FocusUnit.Buffed[i])
+                {
+                    Buff b = FocusUnit.Buffs[i].Buff;
+                    infoText += "\r\n"
+                    + string.Format(TEMPLATE_DISPLAY_BUFF, b.Effect, b.Percent + "%", b.ActualStat);
+                }
+            }
+            TextInfo.text = infoText;
+
+            // Health.text = string.Format(TEMPLATE_DISPLAY_DATA, "Health",
+            //     string.Format("{0}/{1}", curData.baseHealth, originData.baseHealth));
+            // Damage.text = string.Format(TEMPLATE_DISPLAY_DATA, "Damage",
+            //     string.Format("{0}/{1}", curData.baseAttack, originData.baseAttack));
+            // AttackRange.text = string.Format(TEMPLATE_DISPLAY_DATA, "Range",
+            //     string.Format("{0}/{1}", curData.baseAttackRange, originData.baseAttackRange));
+            // AttackRate.text = string.Format(TEMPLATE_DISPLAY_DATA, "Rate",
+            //     string.Format("{0}/{1}", curData.baseAttackRate, originData.baseAttackRate));
         }
     }
 

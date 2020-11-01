@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.UIElements;
-using UnityEngine;
-using UnityEngine.UIElements;
+﻿
 using System.Linq;
+using UnityEngine;
 
 [CreateAssetMenu(fileName = "RoundPlan", menuName = "LChess/RoundPlan", order = 4)]
 [System.Serializable]
-public class RoundPlan : ScriptableObject
+public class RoundPlan : MScriptableObject
 {
     public enum RoundPlanType
     {

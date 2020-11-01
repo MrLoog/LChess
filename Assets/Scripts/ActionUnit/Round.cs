@@ -2,12 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Round", menuName = "LChess/Round", order = 3)]
 [System.Serializable]
-public class Round : ScriptableObject
+public class Round : MScriptableObject
 {
     public enum RoundPhase
     {
@@ -29,8 +28,8 @@ public class Round : ScriptableObject
     public int RoundNumber;
     public Buff[] Buffs = default;
     // public List<ActionUnit> BattleUnit { get; private set; }
-    public List<TileUnitData> StartData;
-    public List<TileUnitData> EndData;
+    public List<ActionUnitData> StartData;
+    public List<ActionUnitData> EndData;
 
     public RoundEnemy EnemySource;
 
@@ -59,7 +58,7 @@ public class Round : ScriptableObject
         UserGroup = mainGroup;
         BattleUnits = battleUnit;
         CurPhase = RoundPhase.NotStart;
-        StartData = battleUnit.Select(a => a.tileUnitData).ToList();
+        StartData = battleUnit.Select(a => a.CurrentStatus).ToList();
     }
 
     public Round()
@@ -71,21 +70,25 @@ public class Round : ScriptableObject
 
     private void ApplyBuff()
     {
-        List<Buff> buffs=new List<Buff>();
-        buffs.AddRange(Buffs);
+        List<BuffFacade> buffs = new List<BuffFacade>();
+        Buffs.ToList().ForEach(x =>
+        {
+            buffs.Add(BuffFacade.CreateFromBuff(x));
+        });
         if (ExpressionNumberBuff.Length > 0)
         {
             string parseExp = ExpressionNumberBuff.Replace("R", RoundNumber.ToString());
             int rs = 0;
-            if (ExpressionEvaluator.Evaluate<int>(parseExp, out rs))
-            {
+            rs = 1;
+            // if (ExpressionEvaluator.Evaluate<int>(parseExp, out rs))
+            // {
                 for (int i = 0; i < rs; i++)
                 {
-                    buffs.Add(Buff.RandomPositiveBuff());
+                    buffs.Add(BuffFacade.RandomPositiveBuff());
                 }
-            }
+            // }
         }
-        foreach (Buff b in buffs)
+        foreach (BuffFacade b in buffs)
         {
             b.PerformBuff(EnemyGroup);
         }
@@ -100,10 +103,9 @@ public class Round : ScriptableObject
             Game.Instance.MirrorSpawn();
         }
         BattleUnits = ActionUnitManger.Instance.GetAll().Where(x => !x.TilePos.PrepareTile).ToList();
-        Debug.Log("Battle Unit "+BattleUnits.Count() );
-        StartData = BattleUnits.Select(a => a.tileUnitData).ToList();
-        MainUnits = BattleUnits.Where(a => a.Group == mainGroup).ToList();
         ApplyBuff();
+        StartData = BattleUnits.Select(a => a.CurrentStatus).ToList();
+        MainUnits = BattleUnits.Where(a => a.Group == mainGroup).ToList();
         MainUnits.ForEach(a =>
         {
             a.IsRealDestroy = false;
@@ -117,11 +119,12 @@ public class Round : ScriptableObject
     }
 
 
-    public bool StartRound()
+    private bool StartRound()
     {
         CurPhase = RoundPhase.Battle;
         Result = RoundResult.NoInfo;
         StartTime = System.DateTime.Now;
+        TimeLeft = RoundTime;
         BattleUnits.ForEach(a => a.BattleMode = true);
         return true;
     }
@@ -132,8 +135,10 @@ public class Round : ScriptableObject
     public bool ValidEndGame(bool autoEnd)
     {
         if (CurPhase != RoundPhase.Battle) return false;
+
+        TimeLeft -= Time.deltaTime;
         bool isEnd =
-        System.DateTime.Now.Subtract(StartTime).TotalSeconds > RoundTime || (BattleUnits.Where(x => x.Alive).ToList().Count == 0) || OnlyGroup;
+        TimeLeft <= 0 || (BattleUnits.Where(x => x.Alive).ToList().Count == 0) || OnlyGroup;
         if (isEnd && autoEnd)
         {
             EndRound();
@@ -143,8 +148,7 @@ public class Round : ScriptableObject
 
     public bool EndRound()
     {
-        EndData = BattleUnits.Where(x => x.Alive).Select(a => a.tileUnitData).ToList();
-        TimeLeft = (float)System.DateTime.Now.Subtract(StartTime).TotalSeconds;
+        EndData = BattleUnits.Where(x => x.Alive).Select(a => a.CurrentStatus).ToList();
         if (OnlyGroup)
         {
             WinGroup = BattleUnits.Where(x => x.Alive).FirstOrDefault().Group;
@@ -172,17 +176,17 @@ public class Round : ScriptableObject
             }
         }
         CurPhase = RoundPhase.End;
-        Debug.Log("Battle Unit "+BattleUnits.Count() );
+        Debug.Log("Battle Unit " + BattleUnits.Count());
 
         BattleUnits.Where(x => x.Alive).ToList().ForEach(x => x.BattleMode = false);
-        Game.Instance.StartCoroutine(Restore(5f));
+        Game.Instance.StartCoroutine(Restore(3f));
 
         return true;
     }
     public IEnumerator Restore(float delay)
     {
         yield return new WaitForSeconds(delay);
-        Debug.Log("Battle Unit "+BattleUnits.Count() );
+        Debug.Log("Battle Unit " + BattleUnits.Count());
         MainMenuControl.Instance.RoundTime = 0;
         BattleUnits.Where(a => a.Group != UserGroup).ToList().ForEach(x => x.Destroy());
         MainUnits.ForEach(a =>
@@ -197,6 +201,12 @@ public class Round : ScriptableObject
         BattleUnits = null;
         MainUnits = null;
         yield return null;
+    }
+
+    internal int GetMaxSpawn()
+    {
+        // return Mathf.CeilToInt(RoundNumber / 2f);
+        return 10;
     }
 
 }

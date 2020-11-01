@@ -15,6 +15,7 @@ MonoBehaviour:
   unitName: Spider
   characterPrefab: {fileID: 7769770407861038690, guid: e180ba4ab1153c64e99b8289666e44f6,
     type: 3}
+  Types: 040000000600000007000000
   baseHealth: 300
   baseAttack: 50
   baseAttackRange: 4

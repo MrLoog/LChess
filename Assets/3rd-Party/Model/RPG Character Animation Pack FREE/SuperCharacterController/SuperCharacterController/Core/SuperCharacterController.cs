@@ -1,9 +1,8 @@
 ﻿// External release version 2.0.0
 
-using UnityEngine;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// Custom character controller, to be used by attaching the component to an object

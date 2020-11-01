@@ -1,6 +1,5 @@
-﻿using UnityEngine;
-using System.Collections;
-using RPGCharacterAnims;
+﻿using RPGCharacterAnims;
+using UnityEngine;
 
 /// <summary>
 /// Rotates a this transform to align it towards the target transform's position.

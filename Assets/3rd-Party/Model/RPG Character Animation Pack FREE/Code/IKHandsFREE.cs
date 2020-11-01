@@ -1,9 +1,10 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
+using UnityEngine;
 
-namespace RPGCharacterAnims{
+namespace RPGCharacterAnims
+{
 
-	public class IKHandsFREE : MonoBehaviour{
+    public class IKHandsFREE : MonoBehaviour{
 		private Animator animator;
 		private RPGCharacterWeaponControllerFREE rpgCharacterWeaponController;
 		public Transform leftHandObj;

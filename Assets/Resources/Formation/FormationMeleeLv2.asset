@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d3483f2fc8b9c649a9d61428cdda88a, type: 3}
+  m_Name: FormationMeleeLv2
+  m_EditorClassIdentifier: 
+  Name: Melle Lv 2
+  Conditions:
+  - {fileID: 11400000, guid: 858e064b6957b1640b38345add3db764, type: 2}
+  Buffs:
+  - {fileID: 11400000, guid: ddbbb486d619f0f4e86adcf06a4e4510, type: 2}
+  NextLevel: {fileID: 11400000, guid: b2d3d37222172cf49a5bf5f37320585f, type: 2}
+  PrevLevel: {fileID: 11400000, guid: 3652585cb372e5846847d912bc5e82db, type: 2}

@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 /// <summary>
 /// Primarily used for debugging purposes, this runs the same nearest point on mesh algorith

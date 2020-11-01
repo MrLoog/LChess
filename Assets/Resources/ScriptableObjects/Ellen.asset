@@ -15,6 +15,7 @@ MonoBehaviour:
   unitName: Ellen
   characterPrefab: {fileID: 5942712507454262125, guid: 3888bb6a988bde14fa9a5eb0cb7ccfb6,
     type: 3}
+  Types: 01000000040000000500000007000000
   baseHealth: 400
   baseAttack: 50
   baseAttackRange: 2

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -45,10 +43,10 @@ public class UnitLevelManager
         Debug.Log("UnitLevelManager level up");
         ActionUnitData newStatus = (ActionUnitData)ScriptableObject.CreateInstance(typeof(ActionUnitData));
         JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(unit.CurrentStatus.NextLevel), newStatus);
-        unit.CurrentStatus = newStatus;
-        ActionUnitData newData = new ActionUnitData();
-        JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(unit.CurrentStatus), newData);
-        unit.tileUnitData = newData;
+
+        unit.tileUnitData = newStatus;
+        unit.CalculateStatusStat();
+        
         materials.ForEach(x => Game.Instance.DestroyUnit(x));
         ValidLevelUpUnit(unit, true);
         return true;

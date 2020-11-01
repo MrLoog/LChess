@@ -1,11 +1,17 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ActionUnitData", menuName = "LChess/ActionUnitData", order = 2)]
 [System.Serializable]
 public class ActionUnitData : TileUnitData
 {
+
+    public enum UnitType
+    {
+        Beast, Human, Fly, Mythical, Special, Melee, Range, Speed, Heavy, Machine
+    }
+
+    public UnitType[] Types;
     public float baseHealth;
     public float baseAttack;
     public float baseAttackRange;
@@ -20,18 +26,17 @@ public class ActionUnitData : TileUnitData
     public TileUnitData NextLevel;
     public TileUnitData PrevLevel;
 
-    public List<Buff> buffs;
-    public List<bool> buffed;
-
-    public bool AddBuff(Buff b)
+    public bool IsValidType(UnitType typeCheck)
     {
-        if (buffs == null)
+        if ((new List<UnitType>(Types)).Contains(typeCheck))
         {
-            buffs = new List<Buff>();
-            buffed = new List<bool>();
+            return true;
         }
-        buffs.Add(b);
-        buffed.Add(false);
-        return true;
+        return false;
+    }
+
+    internal ActionUnitData GetActualStatus()
+    {
+        return this;
     }
 }

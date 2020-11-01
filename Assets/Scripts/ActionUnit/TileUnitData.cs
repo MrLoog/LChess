@@ -1,11 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [CreateAssetMenu(fileName = "TileUnitData", menuName = "LChess/TileUnitData", order = 1)]
 [System.Serializable]
-public class TileUnitData : ScriptableObject
+public class TileUnitData : MScriptableObject
 {
     public string unitName;
     public GameObject characterPrefab;
+
+    
 }

@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-namespace RPGCharacterAnims{
-	
-	public class RPGCharacterInputControllerFREE : MonoBehaviour{
+namespace RPGCharacterAnims
+{
+
+    public class RPGCharacterInputControllerFREE : MonoBehaviour{
 
 		//Inputs.
 		[HideInInspector] public bool inputJump;

@@ -15,6 +15,7 @@ MonoBehaviour:
   unitName: Spitter
   characterPrefab: {fileID: 2679776825152123275, guid: afd618d8e056727439c37cba7abd9637,
     type: 3}
+  Types: 000000000500000007000000
   baseHealth: 1800
   baseAttack: 200
   baseAttackRange: 2

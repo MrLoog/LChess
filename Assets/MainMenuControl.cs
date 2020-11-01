@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -32,12 +31,15 @@ public class MainMenuControl : MonoBehaviour
     public float Round;
     public float RoundTime;
     public float Balance;
+    public float MaxUnit;
+    public float CurrentUnit;
     private const string TEMPLATE_GROUP_HEALTH = "{0}/{1}";
     private const string TEMPLATE_AVERAGE_DMG = "G{0} Dmg(/s): {1}";
     private const string TEMPLATE_REMAIN = "G{0} Remain: {1}";
     private const string TEMPLATE_ROUND = "Round: {0}";
     private const string TEMPLATE_ROUND_TIME = "Time Remain(s): {0}";
     private const string TEMPLATE_GOLD = "Balance: {0}";
+    private const string TEMPLATE_UNIT_SLOT = "Battle Unit: {0}/{1}";
 
     public Slider SliderTotalHealth1;
     public Slider SliderTotalHealth2;
@@ -50,6 +52,7 @@ public class MainMenuControl : MonoBehaviour
     public Text TextRound;
     public Text TextRoundTime;
     public Text TextGold;
+    public Text OtherInfo;
 
     public TMP_Text UserMessage;
 
@@ -74,7 +77,7 @@ public class MainMenuControl : MonoBehaviour
     void Update()
     {
         _process += Time.deltaTime;
-        RoundTime = (RoundTime - Time.deltaTime) > 0 ? (RoundTime - Time.deltaTime) : 0;
+        RoundTime = RoundManager.Instance.Round != null ? RoundManager.Instance.Round.TimeLeft : 0;
         if (_process > _updateTime)
         {
             _process = 0;
@@ -122,6 +125,8 @@ public class MainMenuControl : MonoBehaviour
         AvgDmg2 = 0f;
         Remain1 = 0f;
         Remain2 = 0f;
+        CurrentUnit = 0f;
+        MaxUnit = RoundManager.Instance.Round?.GetMaxSpawn() ?? 0;
         // List<ActionUnit> units = ActionUnitManger.Instance.GetAll();
         ActionUnitData data = null;
         ActionUnitData curData = null;
@@ -135,6 +140,7 @@ public class MainMenuControl : MonoBehaviour
                 CurTotalHealth1 += curData.baseHealth;
                 AvgDmg1 = (AvgDmg1 * Remain1 + curData.baseAttack / curData.baseAttackRate) / (Remain1 + 1);
                 Remain1 += 1;
+                CurrentUnit++;
             }
             else
             {
@@ -153,13 +159,36 @@ public class MainMenuControl : MonoBehaviour
         SliderTotalHealth2.value = SliderTotalHealth2.maxValue * CurTotalHealth2 / OriginTotalHealth2;
         TextGroupHealth1.text = string.Format(TEMPLATE_GROUP_HEALTH, CurTotalHealth1, OriginTotalHealth1);
         TextGroupHealth2.text = string.Format(TEMPLATE_GROUP_HEALTH, CurTotalHealth2, OriginTotalHealth2);
-        TextAvgDmg1.text = string.Format(TEMPLATE_AVERAGE_DMG, 1, AvgDmg1);
-        TextAvgDmg2.text = string.Format(TEMPLATE_AVERAGE_DMG, 2, AvgDmg2);
-        TextRemain1.text = string.Format(TEMPLATE_REMAIN, 1, Remain1);
-        TextRemain2.text = string.Format(TEMPLATE_REMAIN, 2, Remain2);
-        TextRound.text = string.Format(TEMPLATE_ROUND, Round);
-        TextRoundTime.text = string.Format(TEMPLATE_ROUND_TIME, (int)RoundTime);
-        TextGold.text = string.Format(TEMPLATE_GOLD, Balance);
+        string textInfo = "";
+        textInfo = string.Format(TEMPLATE_AVERAGE_DMG, 1, AvgDmg1)
+        + "\r\n"
+        + string.Format(TEMPLATE_AVERAGE_DMG, 2, AvgDmg2)
+        + "\r\n"
+        + string.Format(TEMPLATE_REMAIN, 1, Remain1)
+        + "\r\n"
+        + string.Format(TEMPLATE_REMAIN, 2, Remain2)
+        + "\r\n"
+        + string.Format(TEMPLATE_ROUND, Round)
+        + "\r\n"
+        + string.Format(TEMPLATE_ROUND_TIME, (int)RoundTime)
+        + "\r\n"
+        + string.Format(TEMPLATE_GOLD, Balance)
+        + "\r\n"
+        + string.Format(TEMPLATE_UNIT_SLOT, CurrentUnit, MaxUnit);
+        foreach (FormationFacade f in FormationManager.Instance.ActiveFormations)
+        {
+            textInfo += ""
+        + "\r\n"
+        + f.Formation.Name;
+        }
+        OtherInfo.text = textInfo;
+        // TextAvgDmg1.text = string.Format(TEMPLATE_AVERAGE_DMG, 1, AvgDmg1);
+        // TextAvgDmg2.text = string.Format(TEMPLATE_AVERAGE_DMG, 2, AvgDmg2);
+        // TextRemain1.text = string.Format(TEMPLATE_REMAIN, 1, Remain1);
+        // TextRemain2.text = string.Format(TEMPLATE_REMAIN, 2, Remain2);
+        // TextRound.text = string.Format(TEMPLATE_ROUND, Round);
+        // TextRoundTime.text = string.Format(TEMPLATE_ROUND_TIME, (int)RoundTime);
+        // TextGold.text = string.Format(TEMPLATE_GOLD, Balance);
     }
 
     public Button ButtonStart;
