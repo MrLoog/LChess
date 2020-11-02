@@ -12,22 +12,7 @@ public class Game : MonoBehaviour
     public int MAX_RANDOM_SPAWN = 10;
     private int _spawnCount = 0;
 
-    [SerializeField]
-    public bool _roundMode;
 
-    public bool RoundMode
-    {
-        get
-        {
-            return _roundMode;
-        }
-        set
-        {
-            ClearBoard();
-            RoundManager.Instance.Reset();
-            _roundMode = value;
-        }
-    }
 
 
     public Material MatGroup1;
@@ -45,6 +30,11 @@ public class Game : MonoBehaviour
 
     [SerializeField]
     public Board board = default;
+
+    internal void NewGame(GameMode.GameModeType type)
+    {
+        Profile.InitNewGame(type);
+    }
 
     [SerializeField]
     MonsterFactory monsterFactory = default;
@@ -96,6 +86,9 @@ public class Game : MonoBehaviour
 
     public RoundPlan Plan;
 
+    private GameMode GameModeCtrl;
+    private PlayerProfile Profile;
+
 
     public int SelectedSpawnUnit = -1;
     void OnEnable()
@@ -128,6 +121,7 @@ public class Game : MonoBehaviour
         // FormationManager.Instance.Formations = Resources.FindObjectsOfTypeAll<Formation>().Where(x => x.PrevLevel == null).Select(x => FormationFacade.CreateFromFormation(x)).ToList();
 
         RegisterEvent();
+        Profile = new PlayerProfile();
     }
 
     private void Start()
@@ -300,7 +294,7 @@ public class Game : MonoBehaviour
                     }
                     else
                     {
-                        if (RoundMode && !tile.PrepareTile)
+                        if (!tile.PrepareTile)
                         {
                             int unitOnBoard = ActionUnitManger.Instance.GetAll().Where(x => x.enabled && x.Group == 0 && !x.TilePos.PrepareTile && x.UnitID != grab.UnitID).Count();
                             if (unitOnBoard + 1 > RoundManager.Instance.Round.GetMaxSpawn())
@@ -317,12 +311,9 @@ public class Game : MonoBehaviour
                         grab.TilePos.ActionUnit = null;
                         grab.TilePos = tile;
                         tile.ActionUnit = grab;
-                        if (RoundMode)
+                        if (!grab.TilePos.PrepareTile)
                         {
-                            if (!grab.TilePos.PrepareTile)
-                            {
-                                UnitLevelManager.Instance.ValidLevelUpUnit(grab);
-                            }
+                            UnitLevelManager.Instance.ValidLevelUpUnit(grab);
                         }
                         FormationManager.Instance.ApplyFormation();
                     }
@@ -473,7 +464,7 @@ public class Game : MonoBehaviour
         for (int i = 0; i < MAX_RANDOM_SPAWN; i++)
         {
             group = i % 2 == 0 ? 0 : 1;
-            if (RoundMode && group == 1) continue; // mirror mode chỉ spawn group 0
+            if (group == 1) continue; // mirror mode chỉ spawn group 0
 
             spawnTile = board.GetEmptyTileGroup(group);
             if (spawnTile != null)
@@ -502,7 +493,7 @@ public class Game : MonoBehaviour
 
     private ActionUnit RandomSpawnMonster(GameTile tile, int group)
     {
-        if (RoundMode) group = 0;
+        group = 0;
         return SpawnMonster(tile, group, GetUnitByKeyCode());
         // ActionUnit monster = actionUnitFactory.Get();
         // monster.tileUnitData = GetUnitByKeyCode();
@@ -547,12 +538,9 @@ public class Game : MonoBehaviour
         List<ActionUnit> units = ActionUnitManger.Instance.GetAll().Where(x => !x.TilePos.PrepareTile).ToList();
         int maxLevel = -1;
         int existsMaxLevel = 1;
-        if (RoundMode)
-        {
-            maxLevel = 1 + (RoundManager.Instance.Round.RoundNumber <= 10 ? 0 : +Mathf.CeilToInt((RoundManager.Instance.Round.RoundNumber - 10f) / 5f));
-        }
+        maxLevel = 1 + (RoundManager.Instance.Round.RoundNumber <= 10 ? 0 : +Mathf.CeilToInt((RoundManager.Instance.Round.RoundNumber - 10f) / 5f));
         TileUnitData dataSpawn = null;
-        int spawnCount = RoundMode ? RoundManager.Instance.Round.GetMaxSpawn() : -1;
+        int spawnCount = RoundManager.Instance.Round.GetMaxSpawn();
         foreach (ActionUnit unit in units)
         {
             spawnTile = board.GetRandomEmptyTileGroup(group);
@@ -643,6 +631,7 @@ public class Game : MonoBehaviour
 
     void HandleTouch()
     {
+        Debug.Log("Handle Touch");
         GameTile tile = board.GetTile(InputUtils.GetTouchRayMouse());
         if (tile == null) return;
         if (InputUtils.LeftControlPress())
@@ -662,10 +651,10 @@ public class Game : MonoBehaviour
             // RemoveUnit(focus);
             OnUnitSelected.Invoke((ActionUnit)focus);
         }
-        else if (!RoundMode)
-        {
-            RandomSpawnMonster(tile, InputUtils.LeftShiftPress() ? 1 : 0);
-        }
+        // else if (!RoundMode)
+        // {
+        // RandomSpawnMonster(tile, InputUtils.LeftShiftPress() ? 1 : 0);
+        // }
     }
 
     private void RemoveUnit(ActionUnit remove)

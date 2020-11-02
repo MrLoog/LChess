@@ -71,23 +71,15 @@ public class UnitTag : MonoBehaviour
         // Debug.Log("Select " + tileUnitData.unitName);
         // Game.Instance.PickupUnit = tileUnitData;
         // UnitShop.Instance.HideShop();
-        if (Game.Instance.RoundMode)
+        ActionUnitData data = (ActionUnitData)tileUnitData;
+        if (RoundManager.Instance.GoldAccount.Amount >= data.gold)
         {
-            ActionUnitData data = (ActionUnitData)tileUnitData;
-            if (RoundManager.Instance.GoldAccount.Amount >= data.gold)
-            {
-                RoundManager.Instance.GoldAccount.ApplyDeduct(data.gold);
-                Game.Instance.SpawnPrepareUnit(tileUnitData);
-            }
-            else
-            {
-                MainMenuControl.Instance.ShowUserMessage(UserMessageManager.MES_GOLD_INVALID, 1f);
-            }
+            RoundManager.Instance.GoldAccount.ApplyDeduct(data.gold);
+            Game.Instance.SpawnPrepareUnit(tileUnitData);
         }
         else
         {
-            Game.Instance.PickupUnit = tileUnitData;
-            UnitShop.Instance.HideShop();
+            MainMenuControl.Instance.ShowUserMessage(UserMessageManager.MES_GOLD_INVALID, 1f);
         }
     }
 

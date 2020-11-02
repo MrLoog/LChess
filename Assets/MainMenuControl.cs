@@ -193,8 +193,6 @@ public class MainMenuControl : MonoBehaviour
 
     public Button ButtonStart;
     public Button ButtonPause;
-    public Button ButtonMirrorOn;
-    public Button ButtonMirrorOff;
 
     public void PressStart()
     {
@@ -242,20 +240,6 @@ public class MainMenuControl : MonoBehaviour
     public void PressClear()
     {
         Game.Instance.ClearBoard();
-    }
-
-    public void PressMirrorOn()
-    {
-        ButtonMirrorOn.gameObject.SetActive(false);
-        ButtonMirrorOff.gameObject.SetActive(true);
-        Game.Instance.RoundMode = true;
-    }
-
-    public void PressMirrorOff()
-    {
-        ButtonMirrorOff.gameObject.SetActive(false);
-        ButtonMirrorOn.gameObject.SetActive(true);
-        Game.Instance.RoundMode = false;
     }
 
     public void ShowUserMessage(string message, float time)
