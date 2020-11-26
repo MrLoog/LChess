@@ -4341,9 +4341,7 @@ MonoBehaviour:
   MatGroup2: {fileID: 2100000, guid: 5dd88ac8e84566943818286322fd7a2d, type: 2}
   boardSize: {x: 11, y: 11}
   board: {fileID: 956351220}
-  monsterFactory: {fileID: 11400000, guid: caa6452848000ec40bffcd4d222537c3, type: 2}
   actionUnitFactory: {fileID: 11400000, guid: cb003ddef84f0cb43aab930a40156f9c, type: 2}
-  warFactory: {fileID: 11400000, guid: 476decc2fc913114d8bb3616ec700f28, type: 2}
   PickupUnit: {fileID: 0}
   PickupModel: {fileID: 0}
   GrabUnit: {fileID: 0}
@@ -4385,6 +4383,7 @@ MonoBehaviour:
     type: 3}
   _currentAvaiable: {fileID: 0}
   _lastAvaiable: {fileID: 0}
+  <DefaultInit>k__BackingField: 50
 --- !u!1 &1259719828
 GameObject:
   m_ObjectHideFlags: 0
@@ -6180,13 +6179,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1686417330}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 12, z: -15}
+  m_LocalRotation: {x: 0.60876137, y: 0, z: 0, w: 0.7933534}
+  m_LocalPosition: {x: 0, y: 12, z: -3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 75, y: 0, z: 0}
 --- !u!114 &1686417334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6199,6 +6198,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d6989b5af0a2c3448536fb3f9bdd595, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ViewPos: {x: 0, y: 12, z: 0}
+  ViewRotate: {x: 0.70710677, y: 0, z: 0, w: 0.70710677}
   dragSpeed: 10
   SpeedAnimate: 0.5
 --- !u!1 &1736377985
