@@ -269,7 +269,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3411522349387999939}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d38d6b2273302c49925f68ac1321f5c, type: 3}
+  m_Script: {fileID: 11500000, guid: 033150a8e27a97b44990ee2e8979150f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   RootElem: {fileID: 7747138671606820133}
@@ -520,6 +520,10 @@ MonoBehaviour:
   TilePos: {fileID: 0}
   MirrorEnemy: {fileID: 0}
   _buffed: 
+  idleTimeClip: 0
+  attackTimeClip: 0
+  walkTimeClip: 0
+  deathTimeClip: 0
 --- !u!114 &-4923785437332110509
 MonoBehaviour:
   m_ObjectHideFlags: 0
