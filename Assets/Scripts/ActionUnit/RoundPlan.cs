@@ -11,30 +11,35 @@ public class RoundPlan : MScriptableObject
         Limit, Infinity
     }
 
+    public enum RoundType
+    {
+        Limit, Infinity
+    }
+
     public RoundPlanType PlanType;
     public Round[] Rounds;
 
 
 
-    internal Round GetNextRound(int mainGroup, int curNumberRound)
+    internal Round GetNextRound(int mainGroup, int prevLevel)
     {
         Round newRound = (Round)ScriptableObject.CreateInstance(typeof(Round));
-        if (Rounds.Count() > curNumberRound)
+        if (Rounds.Count() > prevLevel)
         {
-            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(Rounds[curNumberRound]), newRound);
-            return newRound;
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(Rounds[prevLevel]), newRound);
         }
         else
         {
             if (PlanType == RoundPlanType.Infinity)
             {
                 JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(Rounds[Rounds.Count() - 1]), newRound);
-                return newRound;
             }
             else
             {
                 return null;
             }
         }
+        newRound.Level = prevLevel + 1;
+        return newRound;
     }
 }

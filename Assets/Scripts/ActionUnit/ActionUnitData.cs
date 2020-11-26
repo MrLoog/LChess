@@ -18,6 +18,8 @@ public class ActionUnitData : TileUnitData
     public float baseAttackRate;
     public float gold;
 
+    public float AnimationTravel;
+
     public string description;
 
     public Vector3 position { get; set; }

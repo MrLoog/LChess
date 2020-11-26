@@ -102,16 +102,27 @@ public class Board : MonoBehaviour
     {
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            int x = (int)(hit.point.x + Size.x * 0.5f);
-            int y = (int)(hit.point.z + Size.y * 0.5f);
-            if (x >= 0 && x < Size.x && y >= 0 && y < Size.y)
-            {
-                return tiles[x + y * Size.x];
-            }
+            // int x = (int)(hit.point.x + Size.x * 0.5f);
+            // int y = (int)(hit.point.z + Size.y * 0.5f);
+            // if (x >= 0 && x < Size.x && y >= 0 && y < Size.y)
+            // {
+            //     return tiles[x + y * Size.x];
+            // }
+            return GetTileByCordinate(new Vector3(hit.point.x, 0, hit.point.z));
         }
         return null;
     }
 
+    public GameTile GetTileByCordinate(Vector3 pos)
+    {
+        int x = (int)(pos.x + Size.x * 0.5f);
+        int y = (int)(pos.z + Size.y * 0.5f);
+        if (x >= 0 && x < Size.x && y >= 0 && y < Size.y)
+        {
+            return tiles[x + y * Size.x];
+        }
+        return null;
+    }
 
 
     GameTile[] tiles;
@@ -129,7 +140,7 @@ public class Board : MonoBehaviour
             for (int i = 0; i < Size.x; i++)
             {
                 emptyTile = tiles[xFrom * Size.x + i];
-                if (emptyTile.Monster != null || emptyTile.ActionUnit != null)
+                if (!emptyTile.Empty)
                 {
                     emptyTile = null;
                     continue;
@@ -153,7 +164,7 @@ public class Board : MonoBehaviour
         {
             Tile = tile,
             i = index
-        }).Where(a => a.i >= indexMin && a.i < indexMax && a.Tile.Monster == null && a.Tile.ActionUnit == null)
+        }).Where(a => a.i >= indexMin && a.i < indexMax && a.Tile.Empty)
         .Select(a => a.Tile)
         .ToList();
         if (validTiles.Count == 0) return null;
@@ -192,7 +203,7 @@ public class Board : MonoBehaviour
         {
             Tile = tile,
             i = index
-        }).Where(a => a.i >= indexMin && a.i < indexMax && (!empty || (a.Tile.Monster == null && a.Tile.ActionUnit == null)))
+        }).Where(a => a.i >= indexMin && a.i < indexMax && (!empty || a.Tile.Empty))
         .Select(a => a.Tile)
         .ToList();
     }
@@ -218,12 +229,24 @@ public class Board : MonoBehaviour
         {
             Tile = tile,
             i = index
-        }).Where(a => a.Tile.PrepareTile && a.Tile.Monster == null && a.Tile.ActionUnit == null)
+        }).Where(a => a.Tile.PrepareTile && a.Tile.Empty)
         .Select(a => a.Tile)
         .ToList();
         if (validTiles.Count == 0) return null;
 
         int randomIndex = Random.Range(0, validTiles.Count - 1);
         return validTiles[randomIndex];
+    }
+
+    public List<GameTile> GetPrepareTiles(bool checkEmpty = false)
+    {
+        return tiles.Select((tile, index) => new
+        {
+            Tile = tile,
+            i = index
+        }).Where(a => a.Tile.PrepareTile &&
+        (!checkEmpty || a.Tile.Empty))
+        .Select(a => a.Tile)
+        .ToList();
     }
 }

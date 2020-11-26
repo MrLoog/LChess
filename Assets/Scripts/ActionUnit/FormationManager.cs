@@ -1,8 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class FormationManager
 {
+
+    private EventDict _events;
+    public EventDict Events
+    {
+        get
+        {
+            if (_events == null) _events = new EventDict();
+            return _events;
+        }
+    }
+
+    public const string EVENT_FORMATION_APPLY = "FORMATION_APPLY";
+    public const string EVENT_CHECK_BEFORE = "BEFORE_CHECK";
+
+    public List<int> GroupChecks;
     private static FormationManager _instance = new FormationManager();
     public static FormationManager Instance
     {
@@ -63,19 +79,28 @@ public class FormationManager
             x.RemoveBuff();
         });
         List<FormationFacade> validFormations = new List<FormationFacade>();
-        foreach (FormationFacade f in Formations)
+        GroupChecks = ActionUnitManger.Instance.Groups;
+        Events.InvokeOnAction(EVENT_CHECK_BEFORE);
+        foreach (int group in GroupChecks)
         {
-            FormationFacade valid = f.Check(0);
-            if (valid != null)
+            foreach (FormationFacade f in Formations)
             {
-                Debug.Log("Formation Found match formation");
-                validFormations.Add(valid);
+                FormationFacade valid = FormationFacade.CreateFromFormation(f.Formation);
+                valid = valid.Check(group);
+                if (valid != null)
+                {
+                    valid.GroupOwner = group;
+                    Debug.Log("Formation Found match formation " + group);
+                    validFormations.Add(valid);
+                }
             }
         }
+
         ActiveFormations = validFormations;
-        validFormations.ForEach(x =>
+        Events.InvokeOnAction(EVENT_FORMATION_APPLY);
+        ActiveFormations.ForEach(x =>
         {
-            x.ApplyBuff(0);
+            x.ApplyBuff();
         });
 
         // bool existsRemove = false;
@@ -92,5 +117,11 @@ public class FormationManager
         //     x.ApplyBuff(0);
         // });
         // if (existsNew) ActiveFormations.AddRange(validFormations.Where(x => !ActiveFormations.Contains(x)));
+    }
+
+    internal void Init()
+    {
+        ActionUnitManger.Instance.Events.RegisterListener(ActionUnitManger.EVENT_UNIT_SPAWN).AddListener(ApplyFormation);
+        ActionUnitManger.Instance.Events.RegisterListener(ActionUnitManger.EVENT_UNIT_DEATH).AddListener(ApplyFormation);
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,7 +18,12 @@ public class PlayerProfile
         switch (type)
         {
             case GameMode.GameModeType.Demo:
+
+#if UNITY_EDITOR
+                GoldAccount = new GoldAccountModeDemo(1000000f);
+#else
                 GoldAccount = new GoldAccountModeDemo(190f);
+#endif
                 break;
             case GameMode.GameModeType.LTE:
                 GoldAccount = new GoldAccountModeLTE(190f);
@@ -29,11 +35,22 @@ public class PlayerProfile
                 GoldAccount = new GoldAccountModeDemo(190f);
                 break;
         }
+        GameModeCtrl.GoldAccount = GoldAccount;
     }
 
-    public void LoadGame(string name)
+    internal RoundManager InitRoundManager()
     {
+        return GameModeCtrl.InitRoundManager();
+    }
 
+    public bool LoadProfile(string name)
+    {
+        return true;
+    }
+
+    public bool SaveProfile(string name)
+    {
+        return true;
     }
 
     public string[] AllSavedGame()

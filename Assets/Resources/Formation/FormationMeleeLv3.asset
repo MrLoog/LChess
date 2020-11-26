@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3483f2fc8b9c649a9d61428cdda88a, type: 3}
   m_Name: FormationMeleeLv3
   m_EditorClassIdentifier: 
-  Name: Melle Lv 3
+  Name: Melee Lv 3
   Conditions:
   - {fileID: 11400000, guid: 0b294ec44afa8f941acf603c70f5b56d, type: 2}
   Buffs:

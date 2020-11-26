@@ -67,7 +67,6 @@ public class BuffFacade
         }
         else
         {
-            Buff.Percent = 5f;
             target = Game.Instance.board.GetBattleTilesGroup(-1)
             .Where(x => x.ActionUnit != null &&
             (
@@ -77,28 +76,32 @@ public class BuffFacade
             )
             ).Select(x => x.ActionUnit).ToList();
         }
-
+        if (target.Count > 0)
+        {
+            target.ForEach(x => x.AddBuff(this));
+        }
     }
 
     public bool ApplyBuff(ActionUnit unit)
     {
+        //this method usually cann by Action Unit to self buff
         // if (AffectUnit.Count > 0) return false;
         Buff.ActualStat = Buff.Stat;
         if (Buff.Stat == StatAffect.Random)
         {
             Buff.ActualStat = RandomStatAffect();
         }
-        if (Buff.Target != TargetType.Custom)
-        {
-            if (RoundManager.Instance.Round.RoundNumber < 5)
-            {
-                Buff.Percent = 20 - 2 * RoundManager.Instance.Round.RoundNumber;
-            }
-            else
-            {
-                Buff.Percent = 2 * (RoundManager.Instance.Round.RoundNumber - 5);
-            }
-        }
+        // if (Buff.Target != TargetType.Custom)
+        // {
+        //     if (Game.Instance.RoundManager.Round.RoundNumber < 5)
+        //     {
+        //         Buff.Percent = 20 - 2 * Game.Instance.RoundManager.Round.RoundNumber;
+        //     }
+        //     else
+        //     {
+        //         Buff.Percent = 2 * (Game.Instance.RoundManager.Round.RoundNumber - 5);
+        //     }
+        // }
         Debug.Log("Apply Buff " + unit.Group + "/" + Buff.Effect + "/" + Buff.ActualStat + "/" + Buff.Percent);
         float amount = 0;
         ActionUnitData baseStat = (ActionUnitData)unit.tileUnitData;
@@ -107,7 +110,26 @@ public class BuffFacade
             case StatAffect.Health:
                 amount = (Buff.Effect == EffectType.Increase ? 1 : -1) * baseStat.baseHealth * Buff.Percent / 100;
                 unit.OriginStatus.baseHealth += amount;
-                unit.CurrentStatus.baseHealth += amount;
+                if (Buff.Effect == EffectType.Increase)
+                {
+                    if (unit.CurrentStatus.baseHealth < unit.OriginStatus.baseHealth)
+                    {
+                        unit.CurrentStatus.baseHealth =
+                            ((unit.CurrentStatus.baseHealth + amount) > unit.OriginStatus.baseHealth) ?
+                                unit.OriginStatus.baseHealth :
+                                (unit.CurrentStatus.baseHealth + amount);
+                    }
+                }
+                else
+                {
+                    if (unit.CurrentStatus.baseHealth > 0)
+                    {
+                        unit.CurrentStatus.baseHealth =
+                            ((unit.CurrentStatus.baseHealth + amount) <= 0) ?
+                                1 :
+                                (unit.CurrentStatus.baseHealth + amount);
+                    }
+                }
                 break;
             case StatAffect.Damage:
                 amount = (Buff.Effect == EffectType.Increase ? 1 : -1) * baseStat.baseAttack * Buff.Percent / 100;
@@ -137,7 +159,26 @@ public class BuffFacade
             case StatAffect.Health:
                 amount = (Buff.Effect == EffectType.Increase ? 1 : -1) * baseStat.baseHealth * Buff.Percent / 100;
                 unit.OriginStatus.baseHealth -= amount;
-                unit.CurrentStatus.baseHealth -= amount;
+                if (Buff.Effect == EffectType.Increase)
+                {
+                    if (unit.CurrentStatus.baseHealth > 0)
+                    {
+                        unit.CurrentStatus.baseHealth =
+                            ((unit.CurrentStatus.baseHealth - amount) <= 0) ?
+                                1 :
+                                (unit.CurrentStatus.baseHealth - amount);
+                    }
+                }
+                else
+                {
+                    if (unit.CurrentStatus.baseHealth < unit.OriginStatus.baseHealth)
+                    {
+                        unit.CurrentStatus.baseHealth =
+                            ((unit.CurrentStatus.baseHealth - amount) > unit.OriginStatus.baseHealth) ?
+                                unit.OriginStatus.baseHealth :
+                                (unit.CurrentStatus.baseHealth - amount);
+                    }
+                }
                 break;
             case StatAffect.Damage:
                 amount = (Buff.Effect == EffectType.Increase ? 1 : -1) * baseStat.baseAttack * Buff.Percent / 100;
@@ -175,11 +216,20 @@ public class BuffFacade
         return CreateFromBuff(b);
     }
 
-    private static StatAffect RandomStatAffect()
+    public static StatAffect RandomStatAffect(List<StatAffect> limit = null, List<StatAffect> exclude = null)
     {
         Array values = Enum.GetValues(typeof(StatAffect));
         List<int> values2 = new List<int>((IEnumerable<int>)values);
         values2.Remove((int)StatAffect.Random);
+        if (limit != null)
+        {
+            values2.RemoveAll(x => limit.Cast<int>().ToList().IndexOf(x) <= -1);
+        }
+        if (exclude != null)
+        {
+            values2.RemoveAll(x => exclude.Cast<int>().ToList().IndexOf(x) > -1);
+        }
+        if (values2.Count == 0) return StatAffect.Random;
         return (StatAffect)values2[(int)UnityEngine.Random.Range(0, values2.Count)];
     }
 }

@@ -15,6 +15,8 @@ public class GameTile : MonoBehaviour
     public ActionUnit ActionUnit;
     public bool PrepareTile;
 
+    public bool Empty => Monster == null && ActionUnit == null;
+
     public GameTile NTile, NETile, ETile, ESTile, STile, SWTile, WTile, WNTile;
 
     public List<GameTile> FindNearBy(Direction directions)

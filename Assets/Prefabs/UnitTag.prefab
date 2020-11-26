@@ -111,7 +111,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   UnitName: {fileID: 5212215158320153173}
+  UnitModel: {fileID: 3525811145713500839}
   characterPrefabParent: {fileID: 1903366276415930007}
+  OnceMode: 1
+  Sold: 0
 --- !u!114 &3955074988557308593
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -236,7 +239,7 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 1
+    m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0

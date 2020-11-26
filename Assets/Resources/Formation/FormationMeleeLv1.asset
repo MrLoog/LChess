@@ -12,11 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3483f2fc8b9c649a9d61428cdda88a, type: 3}
   m_Name: FormationMeleeLv1
   m_EditorClassIdentifier: 
-  Name: Melle Lv 1
+  Name: Melee Lv 1
   Conditions:
   - {fileID: 11400000, guid: 36cd3de79196b2d4d804549aab433a39, type: 2}
   Buffs:
   - {fileID: 11400000, guid: 5f3d3ad7dd0134c47b9866f6014ae6d6, type: 2}
-  ActiveBuffs: []
   NextLevel: {fileID: 11400000, guid: c9a44123fda14074b861b65f4b34ec99, type: 2}
   PrevLevel: {fileID: 0}

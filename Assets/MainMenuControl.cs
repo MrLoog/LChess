@@ -28,7 +28,8 @@ public class MainMenuControl : MonoBehaviour
     private float Remain1;
     private float Remain2;
 
-    public float Round;
+    public float RoundNumber;
+    public float RoundLevel;
     public float RoundTime;
     public float Balance;
     public float MaxUnit;
@@ -37,6 +38,7 @@ public class MainMenuControl : MonoBehaviour
     private const string TEMPLATE_AVERAGE_DMG = "G{0} Dmg(/s): {1}";
     private const string TEMPLATE_REMAIN = "G{0} Remain: {1}";
     private const string TEMPLATE_ROUND = "Round: {0}";
+    private const string TEMPLATE_ROUND_LEVEL = "Round Level: {0}";
     private const string TEMPLATE_ROUND_TIME = "Time Remain(s): {0}";
     private const string TEMPLATE_GOLD = "Balance: {0}";
     private const string TEMPLATE_UNIT_SLOT = "Battle Unit: {0}/{1}";
@@ -71,13 +73,20 @@ public class MainMenuControl : MonoBehaviour
         // Remain1 = 1f;
         // Remain2 = 2f;
         ScanAndShow(true);
+        Game.Instance.Events.RegisterListener(Game.EVENT_GAME_READY).AddListener(OnGameReady);
+    }
+
+    public void OnGameReady()
+    {
+        Text btnRefresh = ButtonRefresh.GetComponentInChildren<Text>();
+        btnRefresh.text = string.Format(btnRefresh.text, Game.Instance.Profile.GameModeCtrl.GetShopPrice());
     }
 
     // Update is called once per frame
     void Update()
     {
         _process += Time.deltaTime;
-        RoundTime = RoundManager.Instance.Round != null ? RoundManager.Instance.Round.TimeLeft : 0;
+        RoundTime = Game.Instance.RoundManager?.Round != null ? Game.Instance.RoundManager.Round.TimeLeft : 0;
         if (_process > _updateTime)
         {
             _process = 0;
@@ -92,13 +101,14 @@ public class MainMenuControl : MonoBehaviour
 
     public void ScanAndShow(bool isFull)
     {
+        if (!Game.Instance.OnGame) return;
         ScanInfo(isFull);
         ShowInfo();
     }
 
-    internal void ShowGameState(bool onGame)
+    internal void ShowGameState(bool active)
     {
-        if (onGame)
+        if (active)
         {
             ButtonStart.gameObject.SetActive(false);
             ButtonPause.gameObject.SetActive(true);
@@ -126,7 +136,7 @@ public class MainMenuControl : MonoBehaviour
         Remain1 = 0f;
         Remain2 = 0f;
         CurrentUnit = 0f;
-        MaxUnit = RoundManager.Instance.Round?.GetMaxSpawn() ?? 0;
+        MaxUnit = Game.Instance.Profile.GameModeCtrl.GetMaxSpawn();
         // List<ActionUnit> units = ActionUnitManger.Instance.GetAll();
         ActionUnitData data = null;
         ActionUnitData curData = null;
@@ -168,7 +178,9 @@ public class MainMenuControl : MonoBehaviour
         + "\r\n"
         + string.Format(TEMPLATE_REMAIN, 2, Remain2)
         + "\r\n"
-        + string.Format(TEMPLATE_ROUND, Round)
+        + string.Format(TEMPLATE_ROUND, RoundNumber)
+        + "\r\n"
+        + string.Format(TEMPLATE_ROUND_LEVEL, RoundLevel)
         + "\r\n"
         + string.Format(TEMPLATE_ROUND_TIME, (int)RoundTime)
         + "\r\n"
@@ -193,12 +205,13 @@ public class MainMenuControl : MonoBehaviour
 
     public Button ButtonStart;
     public Button ButtonPause;
+    public Button ButtonRefresh;
 
     public void PressStart()
     {
-        ButtonStart.gameObject.SetActive(false);
-        ButtonPause.gameObject.SetActive(true);
-        if (Game.Instance.OnGame)
+        ShowGameState(true);
+        if (Game.Instance.Profile.GameModeCtrl.RoundManager.Round != null
+        && Game.Instance.Profile.GameModeCtrl.RoundManager.Round.CurPhase != global::Round.RoundPhase.NotStart)
         {
             Time.timeScale = 1;
         }
@@ -211,8 +224,7 @@ public class MainMenuControl : MonoBehaviour
 
     public void PressPause()
     {
-        ButtonPause.gameObject.SetActive(false);
-        ButtonStart.gameObject.SetActive(true);
+        ShowGameState(false);
         Time.timeScale = 0;
         MainMenuControl.Instance.ShowUserMessage(UserMessageManager.MES_PAUSE_GAME, 1f);
     }
@@ -224,7 +236,15 @@ public class MainMenuControl : MonoBehaviour
 
     public void PressSpawn()
     {
-        UnitShop.Instance.ToggerShop();
+        UnitShop.Instance.ToggerShop(false);
+    }
+
+    public void PressRefresh()
+    {
+        if (Game.Instance.Profile.GameModeCtrl.GetShopPrice() == 0 || Game.Instance.Profile.GameModeCtrl.DeductGoldForShop())
+        {
+            UnitShop.Instance.Refresh();
+        }
     }
 
     public void PressBattle()

@@ -21,6 +21,7 @@ public class InGameMenuControl : MonoBehaviour
     private const string TEMPLATE_DISPLAY_DATA = "<b>{0}</b> : <color=lime>{1}</color>";
     private const string TEMPLATE_DISPLAY_BUFF = "{0} {1} {2}";
     public GameObject CanvasMenu;
+    public Button ButtonSell;
     public GameObject PanelInfoDetails;
     [SerializeField]
     private ActionUnit _focusUnit;
@@ -41,6 +42,8 @@ public class InGameMenuControl : MonoBehaviour
             else
             {
                 ShowUnitInfo();
+                ButtonSell.gameObject.SetActive(_focusUnit.Group == Game.USER_GROUP);
+                ButtonSell.GetComponentInChildren<Text>().text = string.Format("Sell({0}g)", Game.Instance.Profile.GameModeCtrl.GetSellPriceUnit(value));
             }
         }
     }
@@ -171,6 +174,24 @@ public class InGameMenuControl : MonoBehaviour
     public void PressTarget()
     {
         CursorSwordEnable = !CursorSwordEnable;
+    }
+
+    public void PressSell()
+    {
+        if (FocusUnit != null)
+        {
+            if (Game.Instance.RoundManager.Round.CurPhase == Round.RoundPhase.NotStart || FocusUnit.TilePos.PrepareTile)
+            {
+                if (Game.Instance.Profile.GameModeCtrl.SellUnit(FocusUnit))
+                {
+                    FocusUnit = null;
+                }
+            }
+            else
+            {
+                MainMenuControl.Instance.ShowUserMessage(UserMessageManager.MES_INVALID_SELL, 3f);
+            }
+        }
     }
 
 

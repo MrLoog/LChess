@@ -46,6 +46,7 @@ public class StartMenuControl : MonoBehaviour
     {
         Game.Instance.NewGame(GameMode.GameModeType.Demo);
         HideMenu();
+        CameraCtrl.Instance.AnimateStartGame();
     }
     public void PressLoad()
     {

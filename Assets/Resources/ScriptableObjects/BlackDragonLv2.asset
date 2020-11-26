@@ -21,6 +21,7 @@ MonoBehaviour:
   baseAttackRange: 3
   baseAttackRate: 1.2
   gold: 300
+  AnimationTravel: 4
   description: 
   Level: 2
   NextLevel: {fileID: 11400000, guid: dc0011fa1f3ea2547bb1a77786c9a42b, type: 2}

@@ -3,14 +3,31 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 
 [CreateAssetMenu(fileName = "Round", menuName = "LChess/Round", order = 3)]
 [System.Serializable]
 public class Round : MScriptableObject
 {
+    private EventDict _events;
+    public EventDict Events
+    {
+        get
+        {
+            if (_events == null) _events = new EventDict();
+            return _events;
+        }
+    }
+
+    public const string EVENT_SPAWN_ENEMY = "SPAWN";
+    public const string EVENT_APPLY_BUFF = "APPLY";
+    public const string EVENT_RESULT = "RESULT";
+    public const string EVENT_RESTORE_DONE = "RESTORE";
+
+    public UnityAction<Round> SpawnEnemy;
     public enum RoundPhase
     {
-        NotStart, Battle, End
+        NotStart, Battle, Result, End
     }
 
     public enum RoundEnemy
@@ -26,10 +43,13 @@ public class Round : MScriptableObject
     public string ExpressionNumberBuff;
 
     public int RoundNumber;
+    public int Level;
     public Buff[] Buffs = default;
     // public List<ActionUnit> BattleUnit { get; private set; }
     public List<ActionUnitData> StartData;
     public List<ActionUnitData> EndData;
+
+    public List<BuffFacade> ApplyBuffs;
 
     public RoundEnemy EnemySource;
 
@@ -70,25 +90,26 @@ public class Round : MScriptableObject
 
     private void ApplyBuff()
     {
-        List<BuffFacade> buffs = new List<BuffFacade>();
+        ApplyBuffs = new List<BuffFacade>();
         Buffs.ToList().ForEach(x =>
         {
-            buffs.Add(BuffFacade.CreateFromBuff(x));
+            ApplyBuffs.Add(BuffFacade.CreateFromBuff(x));
         });
-        if (ExpressionNumberBuff.Length > 0)
-        {
-            string parseExp = ExpressionNumberBuff.Replace("R", RoundNumber.ToString());
-            int rs = 0;
-            rs = 1;
-            // if (ExpressionEvaluator.Evaluate<int>(parseExp, out rs))
-            // {
-                for (int i = 0; i < rs; i++)
-                {
-                    buffs.Add(BuffFacade.RandomPositiveBuff());
-                }
-            // }
-        }
-        foreach (BuffFacade b in buffs)
+        // if (ExpressionNumberBuff.Length > 0)
+        // {
+        //     string parseExp = ExpressionNumberBuff.Replace("R", RoundNumber.ToString());
+        //     int rs = 0;
+        //     rs = 1;
+        //     // if (ExpressionEvaluator.Evaluate<int>(parseExp, out rs))
+        //     // {
+        //     for (int i = 0; i < rs; i++)
+        //     {
+        //         ApplyBuffs.Add(BuffFacade.RandomPositiveBuff());
+        //     }
+        //     // }
+        // }
+        Events.InvokeOnAction(EVENT_APPLY_BUFF);
+        foreach (BuffFacade b in ApplyBuffs)
         {
             b.PerformBuff(EnemyGroup);
         }
@@ -97,10 +118,17 @@ public class Round : MScriptableObject
     public bool StartRound(int mainGroup)
     {
         UserGroup = mainGroup;
-
-        if (EnemySource == RoundEnemy.Mirror)
+        Events.InvokeOnAction(EVENT_SPAWN_ENEMY);
+        if (SpawnEnemy != null)
         {
-            Game.Instance.MirrorSpawn();
+            SpawnEnemy.Invoke(this);
+        }
+        else
+        {
+            if (EnemySource == RoundEnemy.Mirror)
+            {
+                Game.Instance.MirrorSpawn();
+            }
         }
         BattleUnits = ActionUnitManger.Instance.GetAll().Where(x => !x.TilePos.PrepareTile).ToList();
         ApplyBuff();
@@ -175,10 +203,10 @@ public class Round : MScriptableObject
                 Result = RoundResult.DrawTimeout;
             }
         }
-        CurPhase = RoundPhase.End;
+        CurPhase = RoundPhase.Result;
+        Events.InvokeOnAction(EVENT_RESULT);
         Debug.Log("Battle Unit " + BattleUnits.Count());
 
-        BattleUnits.Where(x => x.Alive).ToList().ForEach(x => x.BattleMode = false);
         Game.Instance.StartCoroutine(Restore(3f));
 
         return true;
@@ -200,13 +228,15 @@ public class Round : MScriptableObject
         MainMenuControl.Instance.ShowUserMessage(UserMessageManager.MES_PHASE_PREPARE, 1f);
         BattleUnits = null;
         MainUnits = null;
+        CurPhase = RoundPhase.End;
+        Events.InvokeOnAction(EVENT_RESTORE_DONE);
         yield return null;
     }
 
     internal int GetMaxSpawn()
     {
-        // return Mathf.CeilToInt(RoundNumber / 2f);
-        return 10;
+        return Mathf.CeilToInt(Level / 2f);
+        // return 10;
     }
 
 }

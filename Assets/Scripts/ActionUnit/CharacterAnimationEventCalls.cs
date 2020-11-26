@@ -9,6 +9,7 @@ public class CharacterAnimationEventCalls : MonoBehaviour
     public Dictionary<string, UnityEvent> ActionDict = new Dictionary<string, UnityEvent>();
 
     public const string K_ACTION_ATTACK = "ATTACK";
+    public const string K_ACTION_ATTACK_END = "END_ATTACK";
     public const string K_ACTION_DIE = "DIE";
     public const string K_STATE_ATTACK_IN = "STATE_ATTACK_IN";
 
@@ -35,7 +36,6 @@ public class CharacterAnimationEventCalls : MonoBehaviour
 
     public void InvokeOnAction(string action)
     {
-        Debug.Log("Invoke Action " + action);
         if (ActionDict.Keys.ToList().Contains(action))
         {
             ActionDict[action].Invoke();

@@ -4,6 +4,18 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
+
+    private EventDict _events;
+    public EventDict Events
+    {
+        get
+        {
+            if (_events == null) _events = new EventDict();
+            return _events;
+        }
+    }
+
+    public const string EVENT_GAME_READY = "GAME_READY";
     public static string TAG_MONSTER = "CubeMonster";
     public static string TAG_BOARD = "Board";
     public static string TAG_BULLET = "Bullet";
@@ -13,7 +25,7 @@ public class Game : MonoBehaviour
     private int _spawnCount = 0;
 
 
-
+    public const int USER_GROUP = 0;
 
     public Material MatGroup1;
     public Material MatGroup2;
@@ -34,6 +46,10 @@ public class Game : MonoBehaviour
     internal void NewGame(GameMode.GameModeType type)
     {
         Profile.InitNewGame(type);
+        ActiveGameModeCtrl = Profile.GameModeCtrl;
+        RoundManager = Profile.InitRoundManager();
+        OnGame = true;
+        Events.InvokeOnAction(EVENT_GAME_READY);
     }
 
     [SerializeField]
@@ -71,7 +87,6 @@ public class Game : MonoBehaviour
         }
         set
         {
-            MainMenuControl.Instance.ShowGameState(value);
             _onGame = value;
         }
     }
@@ -84,10 +99,11 @@ public class Game : MonoBehaviour
         return attack;
     }
 
+
     public RoundPlan Plan;
 
-    private GameMode GameModeCtrl;
-    private PlayerProfile Profile;
+    public GameMode ActiveGameModeCtrl;
+    public PlayerProfile Profile;
 
 
     public int SelectedSpawnUnit = -1;
@@ -126,7 +142,7 @@ public class Game : MonoBehaviour
 
     private void Start()
     {
-        RoundManager = RoundManager.Instance;
+        FormationManager.Instance.Init();
     }
 
     private void RegisterEvent()
@@ -157,11 +173,11 @@ public class Game : MonoBehaviour
         // }
         DetectGrabUnit();
         UpdatePickupUnit();
-        KeyCodePreUnitSpawn();
+        // KeyCodePreUnitSpawn();
         ToggerBoardGridShow();
         PressHotkeyAllBattle();
         PressHotkeySpawnGroupEqual();
-        RandomSpawnMode();
+        // RandomSpawnMode();
         RoundUpdate();
 
         if (InputUtils.Mouse1Press())
@@ -173,11 +189,11 @@ public class Game : MonoBehaviour
 
     private void RoundUpdate()
     {
-        if (RoundManager.Round != null)
+        if (RoundManager?.Round != null)
         {
             if (RoundManager.Round.ValidEndGame(true))
             {
-                RoundManager.EndRound();
+                // RoundManager.EndRound();
             }
         }
     }
@@ -273,6 +289,10 @@ public class Game : MonoBehaviour
             {
                 if (_isGrab)
                 {
+                    if (tile == null)
+                    {
+                        tile = board.GetTileByCordinate(GrabUnit.transform.localPosition);
+                    }
                     bool newPos = true;
                     _isGrab = false;
                     grab.EnterGrabMode(false);
@@ -294,15 +314,15 @@ public class Game : MonoBehaviour
                     }
                     else
                     {
-                        if (!tile.PrepareTile)
-                        {
-                            int unitOnBoard = ActionUnitManger.Instance.GetAll().Where(x => x.enabled && x.Group == 0 && !x.TilePos.PrepareTile && x.UnitID != grab.UnitID).Count();
-                            if (unitOnBoard + 1 > RoundManager.Instance.Round.GetMaxSpawn())
-                            {
-                                newPos = false;
-                                MainMenuControl.Instance.ShowUserMessage(UserMessageManager.MES_LIMIT_UNIT, 1f);
-                            }
-                        }
+                        // if (!tile.PrepareTile)
+                        // {
+                        //     int unitOnBoard = ActionUnitManger.Instance.GetAll().Where(x => x.enabled && x.Group == 0 && !x.TilePos.PrepareTile && x.UnitID != grab.UnitID).Count();
+                        //     if (unitOnBoard + 1 > Profile.GameModeCtrl.GetMaxSpawn())
+                        //     {
+                        //         newPos = false;
+                        //         MainMenuControl.Instance.ShowUserMessage(UserMessageManager.MES_LIMIT_UNIT, 1f);
+                        //     }
+                        // }
 
                     }
                     if (newPos)
@@ -315,6 +335,7 @@ public class Game : MonoBehaviour
                         {
                             UnitLevelManager.Instance.ValidLevelUpUnit(grab);
                         }
+                        Debug.Log("Formation new pos");
                         FormationManager.Instance.ApplyFormation();
                     }
                     else
@@ -332,9 +353,8 @@ public class Game : MonoBehaviour
             else if (!_isGrab)
             {
                 _accumGrabTime += Time.deltaTime;
-                if (_accumGrabTime > 0.1f)
+                if (_accumGrabTime > 0.3f)
                 {
-                    Debug.Log("Grab" + _accumGrabTime);
                     grab.EnterGrabMode(true);
                     GrabUnit.transform.localPosition += Vector3.up;
                     _isGrab = true;
@@ -411,6 +431,8 @@ public class Game : MonoBehaviour
     {
         if (!actionUnit)
             return;
+        actionUnit.TilePos.ActionUnit = null;
+        actionUnit.TilePos = null;
         ActionUnitManger.Instance.Remove(actionUnit);
         Destroy(actionUnit.gameObject);
 
@@ -514,7 +536,7 @@ public class Game : MonoBehaviour
         }
     }
 
-    private ActionUnit SpawnMonster(GameTile tile, int group, TileUnitData typeUnit)
+    public ActionUnit SpawnMonster(GameTile tile, int group, TileUnitData typeUnit)
     {
         ActionUnit monster = actionUnitFactory.Get();
         monster.tileUnitData = typeUnit;
@@ -538,9 +560,9 @@ public class Game : MonoBehaviour
         List<ActionUnit> units = ActionUnitManger.Instance.GetAll().Where(x => !x.TilePos.PrepareTile).ToList();
         int maxLevel = -1;
         int existsMaxLevel = 1;
-        maxLevel = 1 + (RoundManager.Instance.Round.RoundNumber <= 10 ? 0 : +Mathf.CeilToInt((RoundManager.Instance.Round.RoundNumber - 10f) / 5f));
+        maxLevel = 1 + (Game.Instance.RoundManager.Round.Level <= 10 ? 0 : +Mathf.CeilToInt((Game.Instance.RoundManager.Round.Level - 10f) / 5f));
         TileUnitData dataSpawn = null;
-        int spawnCount = RoundManager.Instance.Round.GetMaxSpawn();
+        int spawnCount = Profile.GameModeCtrl.GetMaxSpawn();
         foreach (ActionUnit unit in units)
         {
             spawnTile = board.GetRandomEmptyTileGroup(group);
@@ -574,7 +596,7 @@ public class Game : MonoBehaviour
         MainMenuControl.Instance.ScanAndShow(true);
     }
 
-    private TileUnitData RandomFromList(List<ActionUnitData> source, int levelLimit = 0)
+    public TileUnitData RandomFromList(List<ActionUnitData> source, int levelLimit = 0)
     {
         List<ActionUnitData> avaiable = source.Where(x => levelLimit == -1 || ((ActionUnitData)x).Level == levelLimit).ToList();
         if (avaiable.Count == 0)
@@ -588,7 +610,6 @@ public class Game : MonoBehaviour
     {
         // if (RoundMode)
         //     MirrorSpawn();
-        OnGame = true;
         RoundManager.StartNewRound(0, ActionUnitManger.Instance.GetAll().Where(x => !x.TilePos.PrepareTile).ToList());
         // AllBattleMode();
     }
@@ -631,7 +652,6 @@ public class Game : MonoBehaviour
 
     void HandleTouch()
     {
-        Debug.Log("Handle Touch");
         GameTile tile = board.GetTile(InputUtils.GetTouchRayMouse());
         if (tile == null) return;
         if (InputUtils.LeftControlPress())
@@ -666,7 +686,14 @@ public class Game : MonoBehaviour
     public void FocusUnit(ActionUnit focus)
     {
         InGameMenuControl.Instance.FocusUnit = focus;
-        GrabUnit = focus.gameObject;
+        if (focus.Group == USER_GROUP)
+        {
+            if (RoundManager.Round.CurPhase == Round.RoundPhase.NotStart)
+            {
+                //chỉ grab khi ở phase not start
+                GrabUnit = focus.gameObject;
+            }
+        }
     }
 
 

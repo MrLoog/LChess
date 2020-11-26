@@ -2,11 +2,24 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+
 public class ActionUnit : MonoBehaviour
 {
+    private EventDict _events;
+    public EventDict Events
+    {
+        get
+        {
+            if (_events == null) _events = new EventDict();
+            return _events;
+        }
+    }
+
+    public const string EVENT_UNIT_LIVE = "UNIT_LIVE";
+    public const string EVENT_UNIT_DEATH = "UNIT_DEATH";
     public enum UnitState
     {
-        Idle, Move, Attack
+        Idle, Move, Attack, Death
     }
 
     public UnitState State = UnitState.Idle;
@@ -92,6 +105,16 @@ public class ActionUnit : MonoBehaviour
         {
             _buffed = value;
         }
+    }
+
+    internal void JumpTo(GameTile gameTile)
+    {
+        transform.localPosition = new Vector3(gameTile.transform.localPosition.x,
+                        transform.localPosition.y,
+                        gameTile.transform.localPosition.z);
+        TilePos.ActionUnit = null;
+        gameTile.ActionUnit = this;
+        TilePos = gameTile;
     }
 
     public bool AddBuff(BuffFacade b, bool IsApply = true)
@@ -210,6 +233,14 @@ public class ActionUnit : MonoBehaviour
     {
         Debug.Assert(_currentState != null, "State null");
         _currentState.Update();
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            AnimateAttack();
+        }
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            AnimateDeath();
+        }
     }
 
     private void DrawCircle(Vector3 position, float radius)
@@ -233,9 +264,12 @@ public class ActionUnit : MonoBehaviour
             characterPrefabParent.transform.ChangeLayersRecursively(gameObject.layer);
 
             _animator = GetComponentInChildren<Animator>();
+            UpdateAnimClipTimes();
             CalculateStatusStat();
             _characterAnimationEventCalls = GetComponentInChildren<CharacterAnimationEventCalls>();
             _characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_ATTACK).AddListener(AttackApplyDamage);
+            _characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_ATTACK_END).AddListener(RecoverSpeedAnimate);
+            Events.InvokeOnAction(EVENT_UNIT_LIVE);
         }
     }
 
@@ -272,6 +306,7 @@ public class ActionUnit : MonoBehaviour
     public void Die()
     {
         _characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_DIE).AddListener(Destroy);
+        ChangeState(UnitState.Death);
         Debug.Log(UnitID + " Die ");
         GetComponent<ActionUnitFindTarget>().enabled = false;
         GetComponent<ActionUnitMove>().enabled = false;
@@ -287,7 +322,10 @@ public class ActionUnit : MonoBehaviour
         GetComponent<ActionUnitFindTarget>().enabled = true;
         GetComponent<ActionUnitMove>().enabled = true;
         GetComponent<ActionUnitAttack>().enabled = true;
-
+        ChangeState(UnitState.Idle);
+        // GetComponent<NavMeshObstacle>().enabled = true;
+        // GetComponent<NavMeshAgent>().enabled = false;
+        Events.InvokeOnAction(EVENT_UNIT_LIVE);
         // StartCoroutine(Destroy());
     }
 
@@ -297,11 +335,14 @@ public class ActionUnit : MonoBehaviour
         // yield return new WaitForSeconds(0.5f);
         // _characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_ATTACK).RemoveListener(AttackApplyDamage);
         // _characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_DIE).RemoveListener(Destroy);
-        Debug.Log("Die and Destroy");
+        Debug.Log("Formation Die and Destroy");
         if (IsRealDestroy)
+        {
             Game.Instance.DestroyUnit(this);
+        }
         else
             gameObject.SetActive(false);
+        Events.InvokeOnAction(EVENT_UNIT_DEATH);
     }
 
 
@@ -349,6 +390,10 @@ public class ActionUnit : MonoBehaviour
                 _currentState = _moveState;
                 AnimateMove();
                 break;
+            case UnitState.Death:
+                GetComponent<NavMeshObstacle>().enabled = false;
+                GetComponent<NavMeshAgent>().enabled = false;
+                break;
             default:
                 _currentState = _moveState;
                 AnimateIdle();
@@ -358,28 +403,97 @@ public class ActionUnit : MonoBehaviour
         return true;
     }
 
+    public const string ANIMATE_NAME_IDLE = "Idle";
+    public const string ANIMATE_NAME_ATTACK = "Attack";
+    public const string ANIMATE_NAME_WALK = "Walk";
+    public const string ANIMATE_NAME_DEATH = "Death";
+
     void AnimateIdle()
     {
-        if (_animator)
-            _animator.Play("Idle", -1);
+        PlayAnimate(ANIMATE_NAME_IDLE);
     }
 
     void AnimateAttack()
     {
-        if (_animator)
-            _animator.Play("Attack", -1);
+        PlayAnimate(ANIMATE_NAME_ATTACK);
     }
 
     void AnimateMove()
     {
-        if (_animator)
-            _animator.Play("Walk", -1);
+        PlayAnimate(ANIMATE_NAME_WALK);
     }
     void AnimateDeath()
     {
-        if (_animator)
-            _animator.Play("Death", -1);
+        PlayAnimate(ANIMATE_NAME_DEATH);
     }
+
+    void PlayAnimate(string name)
+    {
+        // Debug.Log(string.Format("Animator {0} state {1} speed {2}", UnitID, name, _animator.speed));
+
+        if (_animator)
+            _animator.Play(name, -1);
+        AnimatorStateInfo info = _animator.GetCurrentAnimatorStateInfo(0);
+        if (Group == 0)
+            Debug.Log(string.Format("Animator state info {0}/{1}/{2}/{3}/{4}", CurrentStatus.unitName + UnitID + name, _animator.speed, info.speed,walkTimeClip, info.length));
+
+        switch (name)
+        {
+            case ANIMATE_NAME_ATTACK:
+                _animator.speed = 1 * attackTimeClip / CurrentStatus.baseAttackRate;
+                Debug.Log("Attack speed " + _animator.speed);
+                break;
+            case ANIMATE_NAME_DEATH:
+                //thời gian chết 1s
+                _animator.speed = 1 * deathTimeClip / 1f;
+                break;
+            case ANIMATE_NAME_WALK:
+                _animator.speed = GetComponent<NavMeshAgent>().speed / (CurrentStatus.AnimationTravel / walkTimeClip);
+                break;
+            default:
+                _animator.speed = 1;
+                break;
+        }
+        if (Group == 0)
+            Debug.Log(string.Format("Animator state info {0}/{1}/{2}/{3}/{4}", CurrentStatus.unitName + UnitID + name, _animator.speed, info.speed,walkTimeClip, info.length));
+
+    }
+
+    void RecoverSpeedAnimate()
+    {
+        _animator.speed = 1;
+    }
+
+    public float idleTimeClip;
+    public float attackTimeClip;
+    public float walkTimeClip;
+    public float deathTimeClip;
+
+    public void UpdateAnimClipTimes()
+    {
+        AnimationClip[] clips = _animator.runtimeAnimatorController.animationClips;
+        foreach (AnimationClip clip in clips)
+        {
+            Debug.Log(string.Format("Animator clip {0} length {1}", clip.name, clip.length));
+            string name = clip.name.Replace("M_", "").Replace(tileUnitData.name, "");
+            switch (name)
+            {
+                case ANIMATE_NAME_IDLE:
+                    idleTimeClip = clip.length;
+                    break;
+                case ANIMATE_NAME_ATTACK:
+                    attackTimeClip = clip.length;
+                    break;
+                case ANIMATE_NAME_WALK:
+                    walkTimeClip = clip.length;
+                    break;
+                case ANIMATE_NAME_DEATH:
+                    deathTimeClip = clip.length;
+                    break;
+            }
+        }
+    }
+
 
     public void FaceTarget()
     {
@@ -444,11 +558,17 @@ public class ActionUnit : MonoBehaviour
         public void Update()
         {
             ActionUnit target = _host.TargetAttack;
-            if (!target.Alive || !target || !_host.IsEnemyInRangeAttack())
+            if (!target || !target.Alive || !_host.IsEnemyInRangeAttack())
             {
                 // _host._navMeshAgent.enabled = false;
+
                 _host.TargetAttack = null;
-                _host.ChangeState(ActionUnit.UnitState.Idle);
+                if (Time.time - _host.TimeOfLastAttack > ((ActionUnitData)_host.CurrentStatus).baseAttackRate)
+                {
+                    //attack done change state
+                    _host.ChangeState(ActionUnit.UnitState.Idle);
+                }
+                // _host._characterAnimationEventCalls.RegisterListener(CharacterAnimationEventCalls.K_ACTION_ATTACK_END)
                 return;
             }
             else if (Time.time - _host.TimeOfLastAttack > ((ActionUnitData)_host.CurrentStatus).baseAttackRate)
@@ -459,6 +579,8 @@ public class ActionUnit : MonoBehaviour
                 _host.TimeOfLastAttack = Time.time;
             }
         }
+
+
         public void Enable()
         {
         }

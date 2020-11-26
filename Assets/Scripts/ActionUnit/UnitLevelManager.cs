@@ -12,7 +12,6 @@ public class UnitLevelManager
 
     public bool ValidLevelUpUnit(ActionUnit unit, bool levelUp = true)
     {
-        Debug.Log("UnitLevelManager Valid");
         if (unit.CurrentStatus.NextLevel == null)
         {
             return false;

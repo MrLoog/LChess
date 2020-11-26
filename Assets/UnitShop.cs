@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class UnitShop : MonoBehaviour
@@ -8,6 +9,7 @@ public class UnitShop : MonoBehaviour
 
     public bool IsOpen { get; set; } = false;
     public int NumberUnit = 5;
+    private bool IsHaveTag;
 
     List<GameObject> AllUnitTags = new List<GameObject>();
     void Awake()
@@ -33,6 +35,7 @@ public class UnitShop : MonoBehaviour
         //     ScriptTag.tileUnitData = data;
         //     ScriptTag.SpawnCharacter();
         // }
+        ShowRandomUnit();
     }
 
     // Update is called once per frame
@@ -67,24 +70,29 @@ public class UnitShop : MonoBehaviour
         }
     }
 
-    public void ShowShop()
+    public void ShowShop(bool refresh = true)
     {
-        ShowRandomUnit();
+        if (refresh) ShowRandomUnit();
         CanvasShop.SetActive(true);
         IsOpen = true;
-        InputUtils.GameRayCastEnable = false;
+        // InputUtils.GameRayCastEnable = false;
     }
 
     public void HideShop()
     {
         CanvasShop.SetActive(false);
         IsOpen = false;
-        InputUtils.GameRayCastEnable = true;
+        // InputUtils.GameRayCastEnable = true;
     }
 
-    public void ToggerShop()
+    public void ToggerShop(bool refresh = true)
     {
         if (IsOpen) HideShop();
-        else ShowShop();
+        else ShowShop(refresh);
+    }
+
+    internal void Refresh()
+    {
+        ShowShop(true);
     }
 }

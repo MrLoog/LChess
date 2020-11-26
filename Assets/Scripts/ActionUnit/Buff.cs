@@ -3,6 +3,8 @@
 [System.Serializable]
 public class Buff : MScriptableObject
 {
+
+    
     public enum TargetType
     {
         Enemy, Ally, Custom

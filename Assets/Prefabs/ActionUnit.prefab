@@ -272,8 +272,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d38d6b2273302c49925f68ac1321f5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Mat1: {fileID: 2100000, guid: 5f18523a30754b049b7b533b3a7e7383, type: 2}
-  Mat2: {fileID: 2100000, guid: 5dd88ac8e84566943818286322fd7a2d, type: 2}
   RootElem: {fileID: 7747138671606820133}
   Group: 0
   speed: 2
@@ -514,9 +512,14 @@ MonoBehaviour:
   State: 0
   Group: 0
   UnitID: 0
-  CurrentStatus: {fileID: 0}
+  OriginStatus: {fileID: 0}
+  _currentStatus: {fileID: 0}
+  SavedStatus: {fileID: 0}
   characterPrefabParent: {fileID: 7747138670030347971}
   TargetAttack: {fileID: 0}
+  TilePos: {fileID: 0}
+  MirrorEnemy: {fileID: 0}
+  _buffed: 
 --- !u!114 &-4923785437332110509
 MonoBehaviour:
   m_ObjectHideFlags: 0

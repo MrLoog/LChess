@@ -5,6 +5,7 @@ using static Formation;
 public class FormationFacade
 {
     public Formation Formation;
+    public int GroupOwner;
 
     private FormationFacade()
     {
@@ -53,6 +54,7 @@ public class FormationFacade
 
     public FormationFacade Check(int group, FormationCheckType checkType = FormationCheckType.All)
     {
+        this.GroupOwner = group;
         foreach (FormationConditionFacade c in Conditions)
         {
             if (!c.ValidCondition(group))
@@ -74,7 +76,7 @@ public class FormationFacade
         return this;
     }
 
-    public bool ApplyBuff(int group)
+    public bool ApplyBuff()
     {
         if (Formation.Buffs == null || Formation.Buffs.Length <= 0) return false;
         foreach (Buff b in Formation.Buffs)
@@ -83,7 +85,7 @@ public class FormationFacade
             ActiveBuffs.Add(actualBuff);
             foreach (FormationConditionFacade c in Conditions)
             {
-                c.ApplyBuff(actualBuff, group);
+                c.ApplyBuff(actualBuff, GroupOwner);
             }
         }
         return true;
