@@ -10,13 +10,13 @@ Game AutoChess Demo làm bằng Unity.
 
 <img align="left" width="300" height="186" src="images/first_step.png">
 Ấn New để bắt đầu.
-<br/><br/><br/><br/><br/><br/><br/>
+<br/><br/><br/><br/><br/><br/><br/><br/><br/>
 
 <img align="left" width="300" height="186" src="images/press_shop_and_buy_unit.JPG">
 Ấn Shop và mua Unit.
-<br/><br/><br/><br/><br/><br/><br/>
+<br/><br/><br/><br/><br/><br/><br/><br/><br/>
 
 <img align="left" width="300" height="186" src="images/place_unit_on_row_press_start.JPG">
 Kéo và đặt Unit từ hàng 1 lên hàng 2 hoặc hơn và ấn Start để bắt đầu trận chiến.
-<br/><br/><br/><br/><br/><br/><br/>
+<br/><br/><br/><br/><br/><br/><br/><br/><br/>
 
